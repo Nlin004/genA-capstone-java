@@ -16,39 +16,77 @@ Traditional libraries face several operational challenges:
 - Manual tracking of book availability and reservations leads to errors and inefficiency
 - Limited visibility into borrowing patterns and inventory usage
 - Poor user experience with no self-service capabilities for browsing or reserving books
-- Difficulty managing waitlists when popular books are unavailable
-- No analytics or insights for collection development decisions
+- Difficulty managing overdue books and calculating late fees
+- Time-consuming checkout and return processes at the library desk
 
 ### Solution
 
 Our Digital Library Management System provides:
 
 - **Self-service portal** for users to browse, search, and reserve books online
-- **Automated reservation management** with waitlist functionality
+- **Automated reservation management** with 7-day pickup windows
 - **Real-time availability tracking** to reduce operational overhead
-- **Analytics dashboard** for librarians to make data-driven decisions
-- **Scalable architecture** supporting multiple library branches
+- **Librarian tools** for efficient checkout and return processing
+- **Borrowing history** for patrons to track their reading activity
+- **Scalable architecture** ready for cloud deployment
 
 ### Target Users
 
-1. **Library Patrons**: Browse catalog, reserve books, manage reading lists
-2. **Librarians**: Manage collections, process reservations, track inventory
-3. **Library Administrators**: View analytics, generate reports, system configuration
+1. **Library Patrons**: Browse catalog, reserve books, view borrowing history
+2. **Librarians**: Process checkouts and returns, manage reservations
 
 ---
 
-## Milestones and References
+## Project Documentation
 
-1. [User Stories](docs/user-stories.md)
-2. [API Contracts](docs/api-contracts.md)
-3. [Milestone 1: Project Setup & Core Infrastructure](docs/milestone-1-project-setup-core-infrastructure.md)
-4. [Milestone 2: User Service & Authentication](docs/milestone-2-user-service-authentication.md)
-5. [Milestone 3: Catalog Service](docs/milestone-3-catalog-service.md)
-6. [Milestone 4: Reservation Service - Core Functionality](docs/milestone-4-reservation-service-core-functionality.md)
-7. [Milestone 5: Waitlist & Personal Collections](docs/milestone-5-waitlist-personal-collections.md)
-8. [Milestone 6: Admin Dashboard & Analytics](docs/milestone-6-admin-dashboard-analytics.md)
-9. [Milestone 7: Testing & Quality Assurance](docs/milestone-7-testing-quality-assurance.md)
-10. [Milestone 8: Deployment & Production Readiness](docs/milestone-8-deployment-production-readiness.md)
+### Getting Started
+
+1. [Development Environment Setup](docs/dev-environment-setup.md) - Set up Docker, PostgreSQL, and local development
+   environment
+2. [Milestone 1: Data Modeling](docs/milestone-1-data-modeling-guide.md) - Create entity classes and database schema
+
+### Core Features Implementation
+
+3. [Milestone 2: User Service & Authentication](docs/milestone-2-user-service-authentication.md) - Implement
+   registration, login, and JWT authentication
+4. [Milestone 3: Catalog Service](docs/milestone-3-catalog-service.md) - Build book browsing and search functionality
+5. [Milestone 4: Reservation Service](docs/milestone-4-reservation-service-core-functionality.md) - Implement
+   reservation lifecycle management
+
+### Quality & Deployment
+
+6. [Milestone 5: Testing & Quality Assurance](docs/milestone-5-testing-quality-assurance.md) - Comprehensive testing
+   with REST Assured and MockMVC
+7. [Milestone 6: Deployment & Production Readiness](docs/milestone-6-deployment-production-readiness.md) - Deploy to AWS
+   Elastic Beanstalk with RDS
+
+### Reference Documentation
+
+- [User Stories](docs/user-stories.md) - 11 user stories covering all features
+- [API Contracts](docs/api-contracts.md) - Complete API documentation for all 10 endpoints
+
+---
+
+## API Endpoints (10 Total)
+
+### Authentication & User Management (3 endpoints)
+
+- `POST /api/auth/register` - Create new user account
+- `POST /api/auth/login` - Authenticate and receive JWT token
+- `GET /api/users/profile` - View user profile with statistics
+
+### Catalog Management (2 endpoints)
+
+- `GET /api/catalog/books` - Browse and search books with pagination
+- `GET /api/catalog/books/{bookId}` - View detailed book information
+
+### Reservation Management (5 endpoints)
+
+- `POST /api/reservations` - Reserve an available book
+- `GET /api/reservations` - View active reservations
+- `POST /api/reservations/{reservationId}/checkout` - Checkout book (Librarian only)
+- `POST /api/reservations/{reservationId}/return` - Return book with late fee calculation (Librarian only)
+- `GET /api/reservations/history` - View complete borrowing history
 
 ---
 
@@ -58,16 +96,22 @@ Our Digital Library Management System provides:
 
 - **Java**: 17 or 21 (LTS)
 - **Spring Boot**: 3.2+
-- **Spring Security**: 6.2+
+- **Spring Security**: 6.x (JWT authentication)
 - **Spring Data JPA**: 3.2+
 - **PostgreSQL**: 15+
 
 ### Additional Libraries
 
-- **JWT**: io.jsonwebtoken:jjwt
+- **JWT**: io.jsonwebtoken:jjwt-api:0.11.5+
 - **Validation**: spring-boot-starter-validation
 - **OpenAPI**: springdoc-openapi-starter-webmvc-ui
-- **Testing**: JUnit 5, Mockito, TestContainers
+- **Testing**: JUnit 5, Mockito, REST Assured, MockMVC
+
+### AWS Deployment
+
+- **AWS Elastic Beanstalk**: Java application hosting
+- **AWS RDS**: PostgreSQL database
+- **Amazon VPC**: Network security and isolation
 
 ---
 
@@ -75,65 +119,34 @@ Our Digital Library Management System provides:
 
 ### Functional Requirements
 
-- ✅ All 18 user stories fully implemented
-- ✅ 50+ API endpoints documented and functional
-- ✅ Complete reservation lifecycle working end-to-end
-- ✅ Role-based access control enforced
-- ✅ Admin dashboard with real-time analytics
+- ✅ All 11 user stories fully implemented
+- ✅ 10 API endpoints documented and functional
+- ✅ Complete reservation lifecycle working end-to-end (reserve → checkout → return)
+- ✅ Role-based access control enforced (PATRON vs LIBRARIAN)
+- ✅ JWT authentication with 24-hour token expiration
 
 ### Technical Requirements
 
 - ✅ >80% test coverage across all services
-- ✅ All API responses <500ms (p95)
-- ✅ Zero critical security vulnerabilities
-- ✅ OpenAPI documentation complete
-- ✅ Deployed to AWS with RDS integration
+- ✅ Integration tests using REST Assured
+- ✅ Unit tests using MockMVC
+- ✅ OpenAPI documentation complete and accessible
+- ✅ Deployed to AWS with RDS PostgreSQL integration
 
 ### Quality Standards
 
 - ✅ Clean code principles followed
 - ✅ SOLID principles applied
-- ✅ Comprehensive error handling
-- ✅ Proper logging throughout
-- ✅ Production-ready configuration
+- ✅ Comprehensive error handling (400, 401, 403, 404, 500)
+- ✅ Proper logging throughout application
+- ✅ Production-ready configuration for AWS deployment
 
----
+### Business Rules Implemented
 
-## Getting Started
+- ✅ Maximum 5 active reservations per user
+- ✅ 7-day reservation expiry period
+- ✅ 14-day checkout period
+- ✅ $1.00 per day late fee calculation
+- ✅ Real-time book availability tracking
 
-### Prerequisites
-
-```bash
-- Java 17+
-- Maven 3.8+ or Gradle 8+
-- Docker & Docker Compose
-- PostgreSQL 15+ (local or Docker)
-- AWS Account (for deployment phase)
-```
-
-### Local Development Setup
-
-```bash
-# Clone repository
-git clone <repository-url>
-cd java-capstone
-
-# Start application
-./mvnw spring-boot:run
-
-# Access Swagger UI
-open http://localhost:8080/swagger-ui.html
-```
-
-### Running Tests
-
-```bash
-# Run all tests
-./mvnw test
-
-# Run integration tests
-./mvnw verify
-
-# Generate coverage report
-./mvnw jacoco:report
-```
+For detailed implementation guides, refer to the milestone documents in the `docs/` directory.

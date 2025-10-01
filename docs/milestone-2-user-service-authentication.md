@@ -1,4 +1,5 @@
 ### Milestone 2: User Service & Authentication
+
 **Goal:** Implement complete user authentication and authorization system
 
 #### Deliverables:
@@ -63,12 +64,7 @@
 - Response 200: accessToken, tokenType, expiresIn, user object
 - Error 401: Invalid email or password
 
-**3. POST /api/auth/logout**
-- Requires authentication
-- Request: Authorization Bearer token in header
-- Response 200: success message
-
-**4. GET /api/users/profile**
+**3. GET /api/users/profile**
 - Requires authentication
 - Request: Authorization Bearer token in header
 - Response 200: Complete user profile with activeReservations and borrowingHistory counts
@@ -83,12 +79,11 @@
 - Email uniqueness validation tests
 - Password strength validation tests (min 8 chars, uppercase, lowercase, number, special char)
 - Profile statistics calculation tests (activeReservations, borrowingHistory)
-- Logout endpoint test (returns 200 OK)
 
 #### Technical Specifications:
 - Spring Security version: 6.x
 - JWT library: io.jsonwebtoken:jjwt-api:0.11.5+
-- Password encoder: BCryptPasswordEncoder with strength 10
+- Password encoder: `BCryptPasswordEncoder` with strength 10
 - Token signing algorithm: HS256
-- Token secret: Configurable via application.properties (min 256 bits)
-- Stateless session management (SessionCreationPolicy.STATELESS)
+- Token secret: Configurable via `application.properties` (min 256 bits)
+- Stateless session management (`SessionCreationPolicy.STATELESS`)

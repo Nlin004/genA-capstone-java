@@ -104,38 +104,6 @@ Authenticate user credentials and receive JWT access token.
 - Set token expiration to 24 hours (86400 seconds) from issue time
 - Return user profile data along with token
 
----
-
-#### POST /api/auth/logout
-
-Invalidate current JWT session token.
-
-**Access:** Requires authentication (Bearer token)
-
-**Headers:**
-
-```
-Authorization: Bearer {token}
-```
-
-**Request Body:** None
-
-**Success Response (200 OK):**
-
-```json
-{
-  "message": "Logout successful"
-}
-```
-
-**Business Logic:**
-
-- Add token to blacklist/revocation list
-- Token becomes invalid for future requests
-- Client should discard token from storage
-
----
-
 ### User Profile Endpoints
 
 #### GET /api/users/profile
