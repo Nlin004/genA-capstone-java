@@ -166,7 +166,7 @@
 - **Epic 2 (Catalog):** 3 user stories
 - **Epic 3 (Reservations):** 5 user stories
 
-**Endpoints Coverage:**
+**Endpoints Coverage (10 Total):**
 1. POST /api/auth/register → US-001
 2. POST /api/auth/login → US-002
 3. GET /api/users/profile → US-003
