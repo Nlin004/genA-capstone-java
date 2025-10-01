@@ -305,7 +305,7 @@ curl http://[your-eb-url]/api/catalog/books
 
 - Platform: Elastic Beanstalk Java (Corretto 21)
 - Database: RDS PostgreSQL 15.x
-- Instance: t3.small (single instance)
+- Instance: db.t4g.micro (free tier eligible)
 - Storage: 20GB RDS, 10GB EB
 - Region: US East (us-east-1)
 - Schema management: Hibernate DDL auto-update
