@@ -4,7 +4,9 @@
 
 #### POST /api/auth/register
 
-Register a new user account.
+Register a new user account with role defaulting to PATRON.
+
+**Access:** Public (no authentication required)
 
 **Request Body:**
 
@@ -18,7 +20,7 @@ Register a new user account.
 }
 ```
 
-**Response (201 Created):**
+**Success Response (201 Created):**
 
 ```json
 {
@@ -29,7 +31,7 @@ Register a new user account.
   "role": "PATRON",
   "membershipStatus": "ACTIVE",
   "createdAt": "2025-09-29T10:30:00Z",
-  "message": "Registration successful. Please check your email for verification."
+  "message": "Registration successful"
 }
 ```
 
@@ -43,11 +45,20 @@ Register a new user account.
 }
 ```
 
+**Validation Rules:**
+
+- Email must be valid format and unique
+- Password minimum 8 characters with uppercase, lowercase, number, special character
+- All fields are required
+- Phone number must be valid format
+
 ---
 
 #### POST /api/auth/login
 
-Authenticate user and receive JWT token.
+Authenticate user credentials and receive JWT access token.
+
+**Access:** Public (no authentication required)
 
 **Request Body:**
 
@@ -58,7 +69,7 @@ Authenticate user and receive JWT token.
 }
 ```
 
-**Response (200 OK):**
+**Success Response (200 OK):**
 
 ```json
 {
@@ -85,11 +96,21 @@ Authenticate user and receive JWT token.
 }
 ```
 
+**Business Logic:**
+
+- Verify email exists in database
+- Compare password hash using BCrypt
+- Generate JWT token with userId, email, role in claims
+- Set token expiration to 24 hours (86400 seconds) from issue time
+- Return user profile data along with token
+
 ---
 
 #### POST /api/auth/logout
 
-Invalidate current session token.
+Invalidate current JWT session token.
+
+**Access:** Requires authentication (Bearer token)
 
 **Headers:**
 
@@ -97,7 +118,9 @@ Invalidate current session token.
 Authorization: Bearer {token}
 ```
 
-**Response (200 OK):**
+**Request Body:** None
+
+**Success Response (200 OK):**
 
 ```json
 {
@@ -105,13 +128,21 @@ Authorization: Bearer {token}
 }
 ```
 
+**Business Logic:**
+
+- Add token to blacklist/revocation list
+- Token becomes invalid for future requests
+- Client should discard token from storage
+
 ---
 
 ### User Profile Endpoints
 
 #### GET /api/users/profile
 
-Retrieve current user profile.
+Retrieve complete profile for currently authenticated user.
+
+**Access:** Requires authentication (Bearer token)
 
 **Headers:**
 
@@ -119,7 +150,7 @@ Retrieve current user profile.
 Authorization: Bearer {token}
 ```
 
-**Response (200 OK):**
+**Success Response (200 OK):**
 
 ```json
 {
@@ -136,69 +167,13 @@ Authorization: Bearer {token}
 }
 ```
 
----
+**Business Logic:**
 
-#### PUT /api/users/profile
-
-Update user profile information.
-
-**Headers:**
-
-```
-Authorization: Bearer {token}
-```
-
-**Request Body:**
-
-```json
-{
-  "firstName": "John",
-  "lastName": "Doe",
-  "phoneNumber": "+1-555-9999"
-}
-```
-
-**Response (200 OK):**
-
-```json
-{
-  "userId": "uuid-123",
-  "email": "john.doe@example.com",
-  "firstName": "John",
-  "lastName": "Doe",
-  "phoneNumber": "+1-555-9999",
-  "message": "Profile updated successfully"
-}
-```
-
----
-
-#### PUT /api/users/change-password
-
-Change user password.
-
-**Headers:**
-
-```
-Authorization: Bearer {token}
-```
-
-**Request Body:**
-
-```json
-{
-  "currentPassword": "SecurePass123!",
-  "newPassword": "NewSecurePass456!"
-}
-```
-
-**Response (200 OK):**
-
-```json
-{
-  "message": "Password changed successfully"
-}
-```
+- Extract userId from JWT token claims
+- Fetch user record from database
+- Calculate activeReservations count (status = RESERVED or CHECKED_OUT)
+- Calculate borrowingHistory count (total completed reservations)
+- Return complete profile with calculated statistics
 
 ---
 
@@ -206,16 +181,30 @@ Authorization: Bearer {token}
 
 #### GET /api/catalog/books
 
-Retrieve paginated list of books.
+Retrieve paginated and sortable list of all books in the catalog. Supports filtering by combining with search
+parameters.
+
+**Access:** Public (no authentication required)
 
 **Query Parameters:**
 
-- `page` (default: 0)
-- `size` (default: 20)
-- `sortBy` (default: "title")
-- `sortOrder` (default: "asc")
+- `page` (integer, default: 0) - Zero-based page number
+- `size` (integer, default: 20) - Number of books per page
+- `sortBy` (string, default: "title") - Field to sort by (title, author, publicationYear)
+- `sortOrder` (string, default: "asc") - Sort direction (asc, desc)
+- `query` (string, optional) - Search term for title/author full-text search
+- `genre` (string, optional) - Filter by specific genre
+- `isbn` (string, optional) - Filter by exact ISBN match
+- `availableOnly` (boolean, default: false) - If true, show only books with availableCopies > 0
 
-**Response (200 OK):**
+**Example Request:**
+
+```
+GET /api/catalog/books?page=0&size=20&sortBy=title&sortOrder=asc
+GET /api/catalog/books?query=clean&genre=Technology&availableOnly=true
+```
+
+**Success Response (200 OK):**
 
 ```json
 {
@@ -228,7 +217,6 @@ Retrieve paginated list of books.
       "genre": "Technology",
       "publicationYear": 2008,
       "description": "A handbook of agile software craftsmanship",
-      "coverImageUrl": "https://storage.example.com/covers/clean-code.jpg",
       "totalCopies": 5,
       "availableCopies": 2,
       "status": "AVAILABLE"
@@ -241,7 +229,6 @@ Retrieve paginated list of books.
       "genre": "Technology",
       "publicationYear": 2018,
       "description": "Improving the design of existing code",
-      "coverImageUrl": "https://storage.example.com/covers/refactoring.jpg",
       "totalCopies": 3,
       "availableCopies": 0,
       "status": "CHECKED_OUT"
@@ -255,58 +242,29 @@ Retrieve paginated list of books.
 }
 ```
 
----
+**Business Logic:**
 
-#### GET /api/catalog/books/search
-
-Search books with filters.
-
-**Query Parameters:**
-
-- `query` (search term for title/author)
-- `genre` (filter by genre)
-- `isbn` (exact ISBN match)
-- `availableOnly` (boolean, default: false)
-- `page` (default: 0)
-- `size` (default: 20)
-
-**Example:** `/api/catalog/books/search?query=clean&genre=Technology&availableOnly=true`
-
-**Response (200 OK):**
-
-```json
-{
-  "content": [
-    {
-      "bookId": "uuid-book-1",
-      "isbn": "978-0-13-468599-1",
-      "title": "Clean Code",
-      "author": "Robert C. Martin",
-      "genre": "Technology",
-      "publicationYear": 2008,
-      "description": "A handbook of agile software craftsmanship",
-      "coverImageUrl": "https://storage.example.com/covers/clean-code.jpg",
-      "totalCopies": 5,
-      "availableCopies": 2,
-      "status": "AVAILABLE",
-      "relevanceScore": 0.95
-    }
-  ],
-  "page": 0,
-  "size": 20,
-  "totalElements": 1,
-  "totalPages": 1,
-  "last": true
-}
-```
+- If `query` parameter provided, perform full-text search on title and author fields
+- Apply genre filter if provided
+- Apply ISBN exact match filter if provided
+- If `availableOnly=true`, filter books where availableCopies > 0
+- Apply sorting based on sortBy and sortOrder parameters
+- Return paginated results with metadata (page, size, totalElements, totalPages, last)
+- Status is determined by: AVAILABLE (availableCopies > 0), CHECKED_OUT (availableCopies = 0)
 
 ---
 
 #### GET /api/catalog/books/{bookId}
 
-Retrieve detailed information for a specific book.
+Retrieve detailed information for a specific book by its unique identifier.
 
-**Response (200 OK):**
+**Access:** Public (no authentication required)
+
+**Path Parameters:**
+
+- `bookId` (UUID, required) - Unique identifier of the book
+
+**Success Response (200 OK):**
 
 ```json
 {
@@ -317,131 +275,33 @@ Retrieve detailed information for a specific book.
   "genre": "Technology",
   "publicationYear": 2008,
   "description": "A handbook of agile software craftsmanship",
-  "coverImageUrl": "https://storage.example.com/covers/clean-code.jpg",
   "publisher": "Prentice Hall",
   "pageCount": 464,
   "language": "English",
   "totalCopies": 5,
   "availableCopies": 2,
   "status": "AVAILABLE",
-  "waitlistCount": 0,
-  "averageRating": 4.8,
-  "totalReviews": 1247,
   "createdAt": "2025-01-10T09:00:00Z",
   "updatedAt": "2025-09-15T14:22:00Z"
 }
 ```
 
----
-
-#### POST /api/catalog/books
-
-Add a new book to the catalog (Librarian only).
-
-**Headers:**
-
-```
-Authorization: Bearer {token}
-Content-Type: multipart/form-data
-```
-
-**Form Data:**
-
-```
-isbn: 978-0-13-468599-1
-title: Clean Code
-author: Robert C. Martin
-genre: Technology
-publicationYear: 2008
-description: A handbook of agile software craftsmanship
-publisher: Prentice Hall
-pageCount: 464
-language: English
-totalCopies: 5
-coverImage: [binary file data]
-```
-
-**Response (201 Created):**
+**Error Response (404 Not Found):**
 
 ```json
 {
-  "bookId": "uuid-book-1",
-  "isbn": "978-0-13-468599-1",
-  "title": "Clean Code",
-  "author": "Robert C. Martin",
-  "genre": "Technology",
-  "totalCopies": 5,
-  "availableCopies": 5,
-  "coverImageUrl": "https://storage.example.com/covers/uuid-book-1.jpg",
-  "message": "Book added successfully"
+  "error": "NOT_FOUND",
+  "message": "Book not found with ID: uuid-book-1",
+  "timestamp": "2025-09-29T10:30:00Z"
 }
 ```
 
----
+**Business Logic:**
 
-#### PUT /api/catalog/books/{bookId}
-
-Update book information (Librarian only).
-
-**Headers:**
-
-```
-Authorization: Bearer {token}
-```
-
-**Request Body:**
-
-```json
-{
-  "title": "Clean Code: A Handbook of Agile Software Craftsmanship",
-  "description": "Updated description with more details...",
-  "totalCopies": 7
-}
-```
-
-**Response (200 OK):**
-
-```json
-{
-  "bookId": "uuid-book-1",
-  "isbn": "978-0-13-468599-1",
-  "title": "Clean Code: A Handbook of Agile Software Craftsmanship",
-  "totalCopies": 7,
-  "availableCopies": 4,
-  "message": "Book updated successfully"
-}
-```
-
----
-
-#### DELETE /api/catalog/books/{bookId}
-
-Remove a book from the catalog (Admin only).
-
-**Headers:**
-
-```
-Authorization: Bearer {token}
-```
-
-**Response (200 OK):**
-
-```json
-{
-  "message": "Book deleted successfully",
-  "bookId": "uuid-book-1"
-}
-```
-
-**Error Response (409 Conflict):**
-
-```json
-{
-  "error": "CANNOT_DELETE",
-  "message": "Cannot delete book with active reservations",
-  "activeReservations": 3
-}
-```
+- Fetch book record by bookId from database
+- Return complete book details including metadata (publisher, pageCount, language)
+- Include availability information (totalCopies, availableCopies, status)
+- Include audit timestamps (createdAt, updatedAt)
 
 ---
 
@@ -449,7 +309,9 @@ Authorization: Bearer {token}
 
 #### POST /api/reservations
 
-Create a new reservation.
+Create a new reservation for an available book. User can have maximum 5 active reservations.
+
+**Access:** Requires authentication (Bearer token)
 
 **Headers:**
 
@@ -465,7 +327,7 @@ Authorization: Bearer {token}
 }
 ```
 
-**Response (201 Created):**
+**Success Response (201 Created):**
 
 ```json
 {
@@ -480,7 +342,7 @@ Authorization: Bearer {token}
 }
 ```
 
-**Error Response (400 Bad Request):**
+**Error Response (400 Bad Request - Limit Exceeded):**
 
 ```json
 {
@@ -490,11 +352,34 @@ Authorization: Bearer {token}
 }
 ```
 
+**Error Response (400 Bad Request - Book Unavailable):**
+
+```json
+{
+  "error": "BOOK_UNAVAILABLE",
+  "message": "No copies available for reservation",
+  "availableCopies": 0
+}
+```
+
+**Business Logic:**
+
+- Extract userId from JWT token
+- Validate user has fewer than 5 active reservations (status = RESERVED or CHECKED_OUT)
+- Verify book has availableCopies > 0
+- Create reservation with status = RESERVED
+- Set reservedAt to current timestamp
+- Set expiresAt to 7 days from reservedAt
+- Decrement book's availableCopies by 1
+- Return reservation details with success message
+
 ---
 
 #### GET /api/reservations
 
-Get current user's active reservations.
+Retrieve all active reservations for the currently authenticated user.
+
+**Access:** Requires authentication (Bearer token)
 
 **Headers:**
 
@@ -502,7 +387,7 @@ Get current user's active reservations.
 Authorization: Bearer {token}
 ```
 
-**Response (200 OK):**
+**Success Response (200 OK):**
 
 ```json
 {
@@ -512,7 +397,6 @@ Authorization: Bearer {token}
       "bookId": "uuid-book-1",
       "bookTitle": "Clean Code",
       "bookAuthor": "Robert C. Martin",
-      "coverImageUrl": "https://storage.example.com/covers/clean-code.jpg",
       "status": "RESERVED",
       "reservedAt": "2025-09-29T10:30:00Z",
       "expiresAt": "2025-10-06T10:30:00Z",
@@ -523,29 +407,42 @@ Authorization: Bearer {token}
       "bookId": "uuid-book-2",
       "bookTitle": "Refactoring",
       "bookAuthor": "Martin Fowler",
-      "coverImageUrl": "https://storage.example.com/covers/refactoring.jpg",
       "status": "CHECKED_OUT",
       "checkedOutAt": "2025-09-20T14:00:00Z",
       "dueDate": "2025-10-04T14:00:00Z",
-      "daysUntilDue": 5,
-      "renewalsRemaining": 2
+      "daysUntilDue": 5
     }
   ],
   "totalActive": 2
 }
 ```
 
+**Business Logic:**
+
+- Extract userId from JWT token
+- Fetch all reservations where userId matches and status IN (RESERVED, CHECKED_OUT)
+- For RESERVED status: calculate daysUntilExpiry (expiresAt - current date)
+- For CHECKED_OUT status: calculate daysUntilDue (dueDate - current date)
+- Join with book data to include bookTitle and bookAuthor
+- Return array of active reservations with totalActive count
+
 ---
 
 #### POST /api/reservations/{reservationId}/checkout
 
-Process book checkout at library (Librarian only).
+Process book checkout at library desk. Converts RESERVED status to CHECKED_OUT and sets due date.
+
+**Access:** Requires LIBRARIAN role
 
 **Headers:**
 
 ```
 Authorization: Bearer {token}
 ```
+
+**Path Parameters:**
+
+- `reservationId` (UUID, required) - Unique identifier of the reservation
 
 **Request Body:**
 
@@ -555,7 +452,7 @@ Authorization: Bearer {token}
 }
 ```
 
-**Response (200 OK):**
+**Success Response (200 OK):**
 
 ```json
 {
@@ -567,26 +464,13 @@ Authorization: Bearer {token}
 }
 ```
 
----
-
-#### POST /api/reservations/{reservationId}/renew
-
-Renew a checked-out book.
-
-**Headers:**
-
-```
-Authorization: Bearer {token}
-```
-
-**Response (200 OK):**
+**Error Response (403 Forbidden):**
 
 ```json
 {
-  "reservationId": "uuid-res-1",
-  "newDueDate": "2025-10-27T15:00:00Z",
-  "renewalsRemaining": 1,
-  "message": "Book renewed successfully. New due date: October 27, 2025"
+  "error": "FORBIDDEN",
+  "message": "Only librarians can checkout books",
+  "timestamp": "2025-09-29T10:30:00Z"
 }
 ```
 
@@ -594,23 +478,41 @@ Authorization: Bearer {token}
 
 ```json
 {
-  "error": "RENEWAL_NOT_ALLOWED",
-  "message": "Cannot renew book with active waitlist",
-  "waitlistCount": 3
+  "error": "INVALID_STATUS",
+  "message": "Can only checkout reservations with RESERVED status",
+  "currentStatus": "CHECKED_OUT"
 }
 ```
+
+**Business Logic:**
+
+- Verify user has LIBRARIAN role
+- Fetch reservation by reservationId
+- Validate reservation status is RESERVED
+- Update reservation:
+    - Set status = CHECKED_OUT
+    - Set checkedOutAt = current timestamp
+    - Set dueDate = checkedOutAt + 14 days
+    - Store optional notes
+- Return updated reservation with formatted due date message
 
 ---
 
 #### POST /api/reservations/{reservationId}/return
 
-Process book return (Librarian only).
+Process book return at library desk. Calculates late fees if overdue.
+
+**Access:** Requires LIBRARIAN role
 
 **Headers:**
 
 ```
 Authorization: Bearer {token}
 ```
+
+**Path Parameters:**
+
+- `reservationId` (UUID, required) - Unique identifier of the reservation
 
 **Request Body:**
 
@@ -621,7 +523,7 @@ Authorization: Bearer {token}
 }
 ```
 
-**Response (200 OK):**
+**Success Response (200 OK - On Time):**
 
 ```json
 {
@@ -633,7 +535,7 @@ Authorization: Bearer {token}
 }
 ```
 
-**Response with Late Fee (200 OK):**
+**Success Response (200 OK - Late Return):**
 
 ```json
 {
@@ -646,33 +548,50 @@ Authorization: Bearer {token}
 }
 ```
 
----
-
-#### POST /api/reservations/{reservationId}/cancel
-
-Cancel an active reservation.
-
-**Headers:**
-
-```
-Authorization: Bearer {token}
-```
-
-**Response (200 OK):**
+**Error Response (403 Forbidden):**
 
 ```json
 {
-  "reservationId": "uuid-res-1",
-  "status": "CANCELLED",
-  "message": "Reservation cancelled successfully"
+  "error": "FORBIDDEN",
+  "message": "Only librarians can process returns",
+  "timestamp": "2025-09-29T10:30:00Z"
 }
 ```
+
+**Error Response (400 Bad Request):**
+
+```json
+{
+  "error": "INVALID_STATUS",
+  "message": "Can only return books with CHECKED_OUT status",
+  "currentStatus": "RESERVED"
+}
+```
+
+**Business Logic:**
+
+- Verify user has LIBRARIAN role
+- Fetch reservation by reservationId
+- Validate reservation status is CHECKED_OUT
+- Update reservation:
+    - Set status = RETURNED
+    - Set returnedAt = current timestamp
+    - Store condition (GOOD, FAIR, POOR, DAMAGED)
+    - Store optional notes
+- Calculate late fees:
+    - If returnedAt > dueDate: lateDays = days between dueDate and returnedAt
+    - lateFee = lateDays × $1.00 per day
+    - Store lateDays and lateFee in reservation
+- Increment book's availableCopies by 1
+- Return response with late fee details if applicable
 
 ---
 
 #### GET /api/reservations/history
 
-Get borrowing history for current user.
+Retrieve complete borrowing history for the currently authenticated user with pagination.
+
+**Access:** Requires authentication (Bearer token)
 
 **Headers:**
 
@@ -682,10 +601,10 @@ Authorization: Bearer {token}
 
 **Query Parameters:**
 
-- `page` (default: 0)
-- `size` (default: 20)
+- `page` (integer, default: 0) - Zero-based page number
+- `size` (integer, default: 20) - Number of history records per page
 
-**Response (200 OK):**
+**Success Response (200 OK):**
 
 ```json
 {
@@ -694,14 +613,23 @@ Authorization: Bearer {token}
       "reservationId": "uuid-res-100",
       "bookTitle": "Clean Code",
       "bookAuthor": "Robert C. Martin",
-      "coverImageUrl": "https://storage.example.com/covers/clean-code.jpg",
       "reservedAt": "2025-08-15T10:00:00Z",
       "checkedOutAt": "2025-08-16T14:00:00Z",
       "returnedAt": "2025-08-30T09:00:00Z",
       "dueDate": "2025-08-30T14:00:00Z",
       "status": "RETURNED",
-      "renewalCount": 0,
       "wasLate": false
+    },
+    {
+      "reservationId": "uuid-res-99",
+      "bookTitle": "Refactoring",
+      "bookAuthor": "Martin Fowler",
+      "reservedAt": "2025-07-20T10:00:00Z",
+      "checkedOutAt": "2025-07-21T14:00:00Z",
+      "returnedAt": "2025-08-10T09:00:00Z",
+      "dueDate": "2025-08-04T14:00:00Z",
+      "status": "RETURNED",
+      "wasLate": true
     }
   ],
   "page": 0,
@@ -712,647 +640,59 @@ Authorization: Bearer {token}
 }
 ```
 
----
+**Business Logic:**
 
-### Waitlist Endpoints
-
-#### POST /api/waitlist
-
-Join waitlist for an unavailable book.
-
-**Headers:**
-
-```
-Authorization: Bearer {token}
-```
-
-**Request Body:**
-
-```json
-{
-  "bookId": "uuid-book-2"
-}
-```
-
-**Response (201 Created):**
-
-```json
-{
-  "waitlistId": "uuid-wait-1",
-  "bookId": "uuid-book-2",
-  "bookTitle": "Refactoring",
-  "position": 3,
-  "estimatedWaitDays": 42,
-  "joinedAt": "2025-09-29T10:30:00Z",
-  "message": "Added to waitlist. You are #3 in queue."
-}
-```
+- Extract userId from JWT token
+- Fetch all reservations where userId matches (all statuses including RETURNED, CANCELLED)
+- Sort by returnedAt or reservedAt descending (most recent first)
+- For each record, calculate wasLate flag: wasLate = (returnedAt > dueDate)
+- Join with book data to include bookTitle and bookAuthor
+- Return paginated history with metadata (page, size, totalElements, totalPages, last)
 
 ---
 
-#### GET /api/waitlist
+## Common Error Responses
 
-Get current user's waitlist entries.
+All endpoints may return the following error responses:
 
-**Headers:**
-
-```
-Authorization: Bearer {token}
-```
-
-**Response (200 OK):**
+**401 Unauthorized (Missing/Invalid Token):**
 
 ```json
 {
-  "waitlistEntries": [
-    {
-      "waitlistId": "uuid-wait-1",
-      "bookId": "uuid-book-2",
-      "bookTitle": "Refactoring",
-      "bookAuthor": "Martin Fowler",
-      "coverImageUrl": "https://storage.example.com/covers/refactoring.jpg",
-      "position": 3,
-      "estimatedWaitDays": 42,
-      "joinedAt": "2025-09-29T10:30:00Z"
-    }
-  ],
-  "totalWaiting": 1
+  "error": "UNAUTHORIZED",
+  "message": "Authentication required",
+  "timestamp": "2025-09-29T10:30:00Z"
 }
 ```
 
----
-
-#### DELETE /api/waitlist/{waitlistId}
-
-Remove self from waitlist.
-
-**Headers:**
-
-```
-Authorization: Bearer {token}
-```
-
-**Response (200 OK):**
+**403 Forbidden (Insufficient Permissions):**
 
 ```json
 {
-  "message": "Removed from waitlist successfully"
+  "error": "FORBIDDEN",
+  "message": "You do not have permission to access this resource",
+  "timestamp": "2025-09-29T10:30:00Z"
 }
 ```
 
----
-
-### Reading List Endpoints
-
-#### POST /api/reading-list
-
-Add book to reading list.
-
-**Headers:**
-
-```
-Authorization: Bearer {token}
-```
-
-**Request Body:**
+**500 Internal Server Error:**
 
 ```json
 {
-  "bookId": "uuid-book-1",
-  "priority": 1
+  "error": "INTERNAL_SERVER_ERROR",
+  "message": "An unexpected error occurred",
+  "timestamp": "2025-09-29T10:30:00Z"
 }
 ```
 
-**Response (201 Created):**
-
-```json
-{
-  "readingListId": "uuid-rl-1",
-  "bookId": "uuid-book-1",
-  "bookTitle": "Clean Code",
-  "priority": 1,
-  "addedAt": "2025-09-29T10:30:00Z",
-  "message": "Book added to reading list"
-}
-```
-
----
-
-#### GET /api/reading-list
-
-Get current user's reading list.
-
-**Headers:**
-
-```
-Authorization: Bearer {token}
-```
-
-**Response (200 OK):**
-
-```json
-{
-  "readingList": [
-    {
-      "readingListId": "uuid-rl-1",
-      "bookId": "uuid-book-1",
-      "bookTitle": "Clean Code",
-      "bookAuthor": "Robert C. Martin",
-      "coverImageUrl": "https://storage.example.com/covers/clean-code.jpg",
-      "genre": "Technology",
-      "priority": 1,
-      "availabilityStatus": "AVAILABLE",
-      "addedAt": "2025-09-29T10:30:00Z"
-    },
-    {
-      "readingListId": "uuid-rl-2",
-      "bookId": "uuid-book-2",
-      "bookTitle": "Refactoring",
-      "bookAuthor": "Martin Fowler",
-      "coverImageUrl": "https://storage.example.com/covers/refactoring.jpg",
-      "genre": "Technology",
-      "priority": 2,
-      "availabilityStatus": "CHECKED_OUT",
-      "addedAt": "2025-09-28T14:00:00Z"
-    }
-  ],
-  "totalBooks": 2
-}
-```
-
----
-
-#### PUT /api/reading-list/{readingListId}/priority
-
-Update priority of book in reading list.
-
-**Headers:**
-
-```
-Authorization: Bearer {token}
-```
-
-**Request Body:**
-
-```json
-{
-  "priority": 5
-}
-```
-
-**Response (200 OK):**
-
-```json
-{
-  "readingListId": "uuid-rl-1",
-  "priority": 5,
-  "message": "Priority updated successfully"
-}
-```
-
----
-
-#### DELETE /api/reading-list/{readingListId}
-
-Remove book from reading list.
-
-**Headers:**
-
-```
-Authorization: Bearer {token}
-```
-
-**Response (200 OK):**
-
-```json
-{
-  "message": "Book removed from reading list"
-}
-```
-
----
-
-### Favorites Endpoints
-
-#### POST /api/favorites
-
-Add book to favorites.
-
-**Headers:**
-
-```
-Authorization: Bearer {token}
-```
-
-**Request Body:**
-
-```json
-{
-  "bookId": "uuid-book-1"
-}
-```
-
-**Response (201 Created):**
-
-```json
-{
-  "favoriteId": "uuid-fav-1",
-  "bookId": "uuid-book-1",
-  "bookTitle": "Clean Code",
-  "addedAt": "2025-09-29T10:30:00Z",
-  "message": "Book added to favorites"
-}
-```
-
----
-
-#### GET /api/favorites
-
-Get current user's favorite books.
-
-**Headers:**
-
-```
-Authorization: Bearer {token}
-```
-
-**Response (200 OK):**
-
-```json
-{
-  "favorites": [
-    {
-      "favoriteId": "uuid-fav-1",
-      "bookId": "uuid-book-1",
-      "bookTitle": "Clean Code",
-      "bookAuthor": "Robert C. Martin",
-      "coverImageUrl": "https://storage.example.com/covers/clean-code.jpg",
-      "genre": "Technology",
-      "availabilityStatus": "AVAILABLE",
-      "addedAt": "2025-09-29T10:30:00Z"
-    }
-  ],
-  "totalFavorites": 1
-}
-```
-
----
-
-#### DELETE /api/favorites/{favoriteId}
-
-Remove book from favorites.
-
-**Headers:**
-
-```
-Authorization: Bearer {token}
-```
-
-**Response (200 OK):**
-
-```json
-{
-  "message": "Book removed from favorites"
-}
-```
-
----
-
-### Admin Dashboard Endpoints
-
-#### GET /api/admin/dashboard/stats
-
-Get system-wide statistics (Admin only).
-
-**Headers:**
-
-```
-Authorization: Bearer {token}
-```
-
-**Response (200 OK):**
-
-```json
-{
-  "overview": {
-    "totalBooks": 1247,
-    "totalCopies": 3891,
-    "availableCopies": 1523,
-    "totalUsers": 5432,
-    "activeUsers": 3201,
-    "activeReservations": 2368,
-    "overdueReservations": 127
-  },
-  "monthlyStats": {
-    "newRegistrations": 156,
-    "totalCheckouts": 892,
-    "totalReturns": 834,
-    "averageBorrowingDays": 11.3
-  },
-  "popularGenres": [
-    {
-      "genre": "Fiction",
-      "totalCheckouts": 2341,
-      "percentageOfTotal": 28.5
-    },
-    {
-      "genre": "Technology",
-      "totalCheckouts": 1876,
-      "percentageOfTotal": 22.8
-    },
-    {
-      "genre": "Biography",
-      "totalCheckouts": 1234,
-      "percentageOfTotal": 15.0
-    }
-  ],
-  "topBooks": [
-    {
-      "bookId": "uuid-book-5",
-      "title": "The Pragmatic Programmer",
-      "author": "David Thomas",
-      "totalCheckouts": 234,
-      "currentWaitlist": 12
-    }
-  ]
-}
-```
-
----
-
-#### GET /api/admin/users
-
-Get all users with filtering (Admin only).
-
-**Headers:**
-
-```
-Authorization: Bearer {token}
-```
-
-**Query Parameters:**
-
-- `search` (search by name or email)
-- `role` (filter by role: PATRON, LIBRARIAN, ADMIN)
-- `status` (filter by status: ACTIVE, SUSPENDED)
-- `page` (default: 0)
-- `size` (default: 50)
-
-**Response (200 OK):**
-
-```json
-{
-  "content": [
-    {
-      "userId": "uuid-123",
-      "email": "john.doe@example.com",
-      "firstName": "John",
-      "lastName": "Doe",
-      "role": "PATRON",
-      "membershipStatus": "ACTIVE",
-      "memberSince": "2025-01-15T00:00:00Z",
-      "activeReservations": 2,
-      "overdueBooks": 0,
-      "totalBorrowed": 45,
-      "lastActive": "2025-09-28T14:22:00Z"
-    }
-  ],
-  "page": 0,
-  "size": 50,
-  "totalElements": 5432,
-  "totalPages": 109,
-  "last": false
-}
-```
-
----
-
-#### PUT /api/admin/users/{userId}/role
-
-Update user role (Admin only).
-
-**Headers:**
-
-```
-Authorization: Bearer {token}
-```
-
-**Request Body:**
-
-```json
-{
-  "role": "LIBRARIAN"
-}
-```
-
-**Response (200 OK):**
-
-```json
-{
-  "userId": "uuid-123",
-  "email": "john.doe@example.com",
-  "role": "LIBRARIAN",
-  "message": "User role updated successfully"
-}
-```
-
----
-
-#### PUT /api/admin/users/{userId}/status
-
-Suspend or activate user account (Admin only).
-
-**Headers:**
-
-```
-Authorization: Bearer {token}
-```
-
-**Request Body:**
-
-```json
-{
-  "status": "SUSPENDED",
-  "reason": "Repeated late returns"
-}
-```
-
-**Response (200 OK):**
-
-```json
-{
-  "userId": "uuid-123",
-  "membershipStatus": "SUSPENDED",
-  "message": "User account suspended successfully"
-}
-```
-
----
-
-#### GET /api/admin/reports/overdue
-
-Generate overdue books report (Admin only).
-
-**Headers:**
-
-```
-Authorization: Bearer {token}
-```
-
-**Query Parameters:**
-
-- `startDate` (optional)
-- `endDate` (optional)
-
-**Response (200 OK):**
-
-```json
-{
-  "reportGenerated": "2025-09-29T10:30:00Z",
-  "totalOverdue": 127,
-  "totalLateFees": 487.50,
-  "overdueReservations": [
-    {
-      "reservationId": "uuid-res-999",
-      "userId": "uuid-123",
-      "userName": "John Doe",
-      "userEmail": "john.doe@example.com",
-      "userPhone": "+1-555-0123",
-      "bookTitle": "Clean Code",
-      "isbn": "978-0-13-468599-1",
-      "dueDate": "2025-09-15T14:00:00Z",
-      "daysOverdue": 14,
-      "lateFee": 14.00,
-      "lastContactDate": "2025-09-20T10:00:00Z"
-    }
-  ]
-}
-```
-
----
-
-#### GET /api/admin/reports/collection-utilization
-
-Generate collection utilization report (Admin only).
-
-**Headers:**
-
-```
-Authorization: Bearer {token}
-```
-
-**Response (200 OK):**
-
-```json
-{
-  "reportGenerated": "2025-09-29T10:30:00Z",
-  "totalBooks": 1247,
-  "neverBorrowed": 89,
-  "lowUtilization": 234,
-  "recommendations": [
-    {
-      "bookId": "uuid-book-999",
-      "title": "Obscure Programming Language Guide",
-      "author": "Unknown Author",
-      "totalCopies": 5,
-      "timesCheckedOut": 0,
-      "monthsSincePurchase": 24,
-      "recommendation": "REMOVE",
-      "reason": "Never borrowed in 2 years"
-    }
-  ]
-}
-```
-
----
-
-#### GET /api/admin/reports/monthly-summary
-
-Generate monthly activity summary (Admin only).
-
-**Headers:**
-
-```
-Authorization: Bearer {token}
-```
-
-**Query Parameters:**
-
-- `month` (format: YYYY-MM)
-
-**Response (200 OK):**
-
-```json
-{
-  "month": "2025-09",
-  "reportGenerated": "2025-09-29T10:30:00Z",
-  "summary": {
-    "newRegistrations": 156,
-    "totalCheckouts": 892,
-    "totalReturns": 834,
-    "totalRenewals": 234,
-    "newBooksAdded": 47,
-    "averageBorrowingDays": 11.3,
-    "totalLateFees": 1250.00,
-    "uniqueActiveUsers": 1892
-  },
-  "dailyActivity": [
-    {
-      "date": "2025-09-01",
-      "checkouts": 32,
-      "returns": 28,
-      "renewals": 8
-    }
-  ],
-  "topPerformers": {
-    "mostBorrowedBooks": [
-      {
-        "title": "The Pragmatic Programmer",
-        "checkouts": 42
-      }
-    ],
-    "mostActiveUsers": [
-      {
-        "userName": "Jane Smith",
-        "totalCheckouts": 12
-      }
-    ]
-  }
-}
-```
-
----
-
-#### POST /api/admin/reports/export
-
-Export report as CSV or PDF (Admin only).
-
-**Headers:**
-
-```
-Authorization: Bearer {token}
-```
-
-**Request Body:**
-
-```json
-{
-  "reportType": "OVERDUE",
-  "format": "CSV",
-  "dateRange": {
-    "startDate": "2025-09-01",
-    "endDate": "2025-09-30"
-  }
-}
-```
-
-**Response (200 OK):**
-
-```json
-{
-  "exportId": "uuid-export-1",
-  "downloadUrl": "https://storage.example.com/reports/overdue-2025-09.csv",
-  "expiresAt": "2025-09-30T10:30:00Z",
-  "message": "Report generated successfully"
-}
-```
+## Notes
+
+- All timestamps are in ISO 8601 format (UTC)
+- All UUIDs are RFC 4122 compliant
+- Bearer tokens must be included in Authorization header for protected endpoints
+- Token expiration is 86400 seconds (24 hours)
+- Maximum active reservations per user: 5
+- Reservation expiry period: 7 days from reservation
+- Checkout period: 14 days from checkout
+- Late fee rate: $1.00 per day
+- Roles: PATRON (regular users), LIBRARIAN (can checkout/return books)
