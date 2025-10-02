@@ -117,6 +117,9 @@ Our Digital Library Management System provides:
 
 ## Success Criteria
 
+> Capstones will be graded using the following success criteria on a Pass/Fail basis.<br>
+> You will revieve a score out of 20, along with instrcutor feedback.
+
 ### Functional Requirements
 
 - ✅ All 11 user stories fully implemented
