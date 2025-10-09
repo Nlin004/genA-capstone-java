@@ -149,7 +149,14 @@ You may choose appropriate libraries for:
 
 ## Success Criteria
 
+<<<<<<< HEAD
 ### Business Requirements
+=======
+> Capstones will be graded using the following success criteria on a Pass/Fail basis.<br>
+> You will revieve a score out of 20, along with instrcutor feedback.
+
+### Functional Requirements
+>>>>>>> d69bf7ff68e813a61c1bb707136c0d6d73d6f9e5
 
 Your implementation must satisfy all requirements from the **User Stories**:
 
@@ -175,6 +182,7 @@ Your API must match the **API Contracts** specification exactly:
 - Security properly implemented (JWT, role-based access)
 - Successfully deployed to cloud environment
 
+<<<<<<< HEAD
 ### Functional Verification
 
 - Complete reservation lifecycle works (reserve → checkout → return)
@@ -240,3 +248,6 @@ You must adhere to:
 
 **Remember**: The User Stories and API Contracts define **WHAT** you must build. The milestone documents suggest **HOW**
 you might approach it, but you have flexibility in your implementation choices as long as you meet the requirements!
+=======
+For detailed implementation guides, refer to the milestone documents in the `docs/` directory.
+>>>>>>> d69bf7ff68e813a61c1bb707136c0d6d73d6f9e5
