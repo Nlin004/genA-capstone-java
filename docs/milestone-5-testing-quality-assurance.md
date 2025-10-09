@@ -1,173 +1,219 @@
-### Milestone 5: Testing & Quality Assurance
-**Goal:** Achieve comprehensive test coverage using REST Assured and MockMVC for all 11 endpoints
+Perfect! Here's the revised **Milestone 5: Testing & Quality Assurance**:
 
-#### Deliverables:
+---
 
-1. **REST Assured Setup**
-   - REST Assured configuration with baseURI and basePath
-   - Base test class with common setup (RestAssuredBaseTest)
-   - RequestSpecification with default headers and content-type
-   - ResponseSpecification for common assertions
-   - Authentication helper methods (login and token extraction)
-   - Test data builders for request bodies
-   - JSON schema validation files for all 11 endpoints
+# Milestone 5: Testing & Quality Assurance
 
-2. **MockMVC Configuration**
-   - @WebMvcTest configuration for controller layer tests
-   - MockMVC test context setup with security configuration
-   - Base controller test class (ControllerTestBase)
-   - @MockBean for service layer dependencies
-   - Mock security context with authenticated users (PATRON and LIBRARIAN roles)
-   - Request builders using MockMvcRequestBuilders
-   - Result matchers using MockMvcResultMatchers
-   - ObjectMapper configuration for JSON serialization
+**Goal:** Achieve comprehensive test coverage for all 11 API endpoints
 
-3. **Comprehensive Test Suite**
+**Related User Stories:** All (US-001 through US-011)
 
-   **Unit Tests (MockMVC) - Target: 85% coverage**
-   - **AuthController Tests**
-      - POST /api/auth/register: Valid registration, duplicate email (400), validation errors
-      - POST /api/auth/login: Valid login, invalid credentials (401)
-      - POST /api/auth/logout: Authenticated logout (200), unauthenticated (401)
+---
 
-   - **UserController Tests**
-      - GET /api/users/profile: Authenticated access (200), unauthenticated (401)
-      - Verify activeReservations and borrowingHistory calculations
+## Business Requirements
 
-   - **CatalogController Tests**
-      - GET /api/catalog/books: Default pagination, custom sorting, filtering (query, genre, isbn, availableOnly)
-      - GET /api/catalog/books/{bookId}: Valid bookId (200), invalid bookId (404)
-      - Public access (no authentication required)
+### Testing Objectives
+- Verify all API endpoints function according to specifications
+- Ensure business rules are correctly implemented
+- Validate security and authorization requirements
+- Confirm error handling and edge cases
+- Demonstrate system reliability and quality
 
-   - **ReservationController Tests**
-      - POST /api/reservations: Valid reservation (201), limit exceeded (400), book unavailable (400)
-      - GET /api/reservations: Authenticated access, empty list
-      - POST /api/reservations/{id}/checkout: LIBRARIAN success (200), PATRON forbidden (403), invalid status (400)
-      - POST /api/reservations/{id}/return: LIBRARIAN success (200), late return with fees, PATRON forbidden (403)
-      - GET /api/reservations/history: Paginated history with wasLate flag
+### Quality Standards
+- Minimum 80% code coverage overall
+- All 11 endpoints must have automated tests
+- All business rules validated through tests
+- Security requirements verified
+- Error responses tested and consistent
 
-   - **Exception Handling Tests**
-      - @RestControllerAdvice exception handler tests
-      - Validation error responses (400)
-      - Authentication failures (401)
-      - Authorization failures (403)
-      - Not found errors (404)
-      - Internal server errors (500)
+---
 
-   **Integration Tests (REST Assured) - End-to-End**
-   - **Authentication Flow Tests**
-      - Complete flow: register → login → access protected endpoint
-      - Token expiration validation (24 hours)
-      - Invalid token rejection (401)
+## General Technical Requirements
 
-   - **Authorization Tests**
-      - PATRON can access: profile, catalog, reservations (own)
-      - PATRON cannot access: checkout (403), return (403)
-      - LIBRARIAN can access: all PATRON endpoints + checkout + return
-      - Public endpoints accessible without authentication
+**Test Types Required:**
+- Unit tests for isolated component testing
+- Integration tests for end-to-end workflows
+- API contract validation tests
 
-   - **Catalog Integration Tests**
-      - Browse books with various pagination parameters
-      - Search with query parameter
-      - Combined filtering (query + genre + availableOnly)
-      - Sort by title, author, publicationYear (asc/desc)
-      - Retrieve specific book details
+**Test Coverage Areas:**
+1. **Authentication & Authorization**
+    - User registration and login flows
+    - JWT token generation and validation
+    - Role-based access control (PATRON vs LIBRARIAN)
+    - Public vs protected endpoint access
 
-   - **Reservation Lifecycle Tests**
-      - Create reservation → verify availableCopies decremented
-      - Checkout as LIBRARIAN → verify dueDate calculation
-      - Return on time → verify availableCopies incremented, no late fee
-      - Return late → verify lateDays and lateFee calculation
-      - View borrowing history → verify wasLate flag
+2. **Catalog Operations**
+    - Pagination and sorting
+    - Search and filtering
+    - Book details retrieval
+    - Public access validation
 
-   - **Multi-Step Workflow Tests**
-      - User registers → logs in → searches books → reserves book → views active reservations
-      - Librarian checks out book → patron views updated reservation → librarian returns book
-      - Reservation limit enforcement (create 5 reservations, 6th fails with 400)
+3. **Reservation Lifecycle**
+    - Reservation creation with business rule validation
+    - Active reservations view
+    - Checkout process (LIBRARIAN only)
+    - Return process with late fee calculation
+    - Borrowing history
 
-   - **Error Scenario Validation**
-      - Reserve book with 0 available copies (400)
-      - Checkout non-RESERVED reservation (400)
-      - Return non-CHECKED_OUT reservation (400)
-      - Access protected endpoint without token (401)
-      - PATRON attempts checkout (403)
-      - Invalid bookId in catalog (404)
+4. **Business Rule Validation**
+    - 5 reservation limit enforcement
+    - 7-day reservation expiry
+    - 14-day checkout period
+    - $1/day late fee calculation
+    - Available copies synchronization
 
-   **API Contract Testing**
-   - Request schema validation for all POST endpoints (register, login, reservations, checkout, return)
-   - Response schema validation for all 200/201 responses
-   - HTTP status code verification (200, 201, 400, 401, 403, 404, 500)
-   - Authorization header validation (Bearer token format)
-   - Content-Type header verification (application/json)
-   - Error response format consistency across all endpoints (error, message, timestamp)
-   - Pagination structure validation (content, page, size, totalElements, totalPages, last)
+5. **Error Handling**
+    - Validation errors (400)
+    - Authentication failures (401)
+    - Authorization failures (403)
+    - Resource not found (404)
+    - Server errors (500)
 
-4. **Test Coverage & Quality**
-   - Unit test coverage target: 85%
-   - Integration test coverage for all 11 endpoints
-   - Edge cases: empty results, boundary values (page=0, size=1000)
-   - Boundary conditions: exactly 5 reservations, 0 available copies
-   - Negative scenarios: invalid UUIDs, malformed JSON, missing required fields
-   - Concurrent request tests: multiple users reserving last available copy
+**Performance Considerations:**
+- Tests should run efficiently
+- Test data should be isolated
+- Tests should be repeatable and deterministic
 
-#### Acceptance Criteria:
-- [ ] Overall test coverage >80% (measured by JaCoCo)
-- [ ] All 11 endpoints have REST Assured integration tests
-- [ ] All 11 endpoints have MockMVC unit tests
-- [ ] API contract validation implemented with JSON schemas
-- [ ] All authentication flows tested (register, login, logout, token validation)
-- [ ] All authorization rules tested (PATRON vs LIBRARIAN access)
-- [ ] Pagination tested across catalog and history endpoints
-- [ ] Reservation lifecycle fully tested (create → checkout → return)
-- [ ] Late fee calculation verified with multiple test cases
-- [ ] Error responses follow consistent format (error, message, timestamp)
-- [ ] No failing tests in CI/CD pipeline
+---
 
-#### Test Organization:
+## Deliverables
 
-**Package Structure:**
-```
-src/test/java/
-├── com.library.integration/          (REST Assured tests)
-│   ├── AuthIntegrationTest
-│   ├── CatalogIntegrationTest
-│   ├── ReservationIntegrationTest
-│   └── base/
-│       └── RestAssuredBaseTest
-├── com.library.controller/           (MockMVC tests)
-│   ├── AuthControllerTest
-│   ├── UserControllerTest
-│   ├── CatalogControllerTest
-│   ├── ReservationControllerTest
-│   └── base/
-│       └── ControllerTestBase
-└── com.library.service/              (Service layer unit tests)
-    ├── UserServiceTest
-    ├── BookServiceTest
-    └── ReservationServiceTest
-```
+### 1. Unit Tests
+Implement tests that verify individual components in isolation:
+- Controller layer tests
+- Service layer business logic tests
+- Input validation tests
+- Security configuration tests
+- Error handling tests
 
-#### Testing Deliverables:
-- JaCoCo test coverage report (HTML + XML)
-- REST Assured test execution results
-- MockMVC test results
-- SonarQube code quality metrics report
-- Test documentation with examples for each endpoint category
-- CI/CD integration configuration (GitHub Actions or Jenkins)
+### 2. Integration Tests
+Implement tests that verify complete workflows:
+- Authentication flow (register → login → access protected endpoint)
+- Reservation lifecycle (reserve → checkout → return)
+- Multi-step user workflows
+- Authorization enforcement across endpoints
+- Public endpoint accessibility
 
-#### Technical Specifications:
-- REST Assured version: 5.3+
-- Spring Boot Test version: 3.x
-- JUnit 5 (Jupiter)
-- Mockito for mocking
-- Hamcrest matchers for assertions
-- JSON Schema Validator for contract testing
-- JaCoCo for code coverage
-- H2 or Testcontainers for test database
+### 3. API Contract Tests
+Implement tests that verify external API interface:
+- Request/response structure validation
+- HTTP status codes
+- Response format consistency
+- Error response structure
+- Pagination structure
 
-#### Technical Debt & Risks:
-- Concurrent reservation tests may be flaky without proper transaction isolation
-- Test data cleanup between tests required to avoid state leakage
-- Performance tests not included (consider separate milestone if needed)
-- Security penetration testing not included
-- Load testing not included
+### 4. Business Rule Tests
+Implement tests that verify business logic:
+- Reservation limit (maximum 5 active)
+- Available copies management
+- Date calculations (expiry, due date)
+- Late fee calculations
+- Status transitions (RESERVED → CHECKED_OUT → RETURNED)
+
+### 5. Edge Case Tests
+Implement tests for boundary conditions:
+- Empty results
+- Exactly at limit (5 reservations)
+- Zero available copies
+- Invalid identifiers
+- Missing required fields
+- Expired tokens
+
+---
+
+## Test Scenarios to Cover
+
+### Authentication Endpoints
+- User registration with valid data
+- Registration with duplicate email (400)
+- Registration with invalid password (400)
+- Login with valid credentials
+- Login with invalid credentials (401)
+- Access protected endpoint with valid token
+- Access protected endpoint without token (401)
+- Token expiration after 24 hours
+
+### User Profile Endpoint
+- Retrieve profile with valid authentication
+- Profile includes correct activeReservations count
+- Profile includes correct borrowingHistory count
+- Access without authentication (401)
+
+### Catalog Endpoints
+- Browse books with default pagination
+- Browse books with custom pagination and sorting
+- Search books by title/author
+- Filter by genre
+- Filter by ISBN
+- Filter by availability only
+- Combined filters (query + genre + availableOnly)
+- Retrieve specific book by ID
+- Retrieve non-existent book (404)
+- Public access (no authentication required)
+
+### Reservation Endpoints
+- Create reservation with available book
+- Create reservation when at limit of 5 (400)
+- Create reservation for unavailable book (400)
+- View active reservations
+- Checkout as LIBRARIAN
+- Checkout as PATRON (403)
+- Checkout non-RESERVED reservation (400)
+- Return as LIBRARIAN (on time)
+- Return as LIBRARIAN (late with fees)
+- Return as PATRON (403)
+- Return non-CHECKED_OUT reservation (400)
+- View paginated borrowing history
+- History includes wasLate flag
+
+### Data Integrity Tests
+- Available copies decrements on reservation
+- Available copies increments on return
+- Late days calculated correctly
+- Late fee calculated at $1/day
+- Expiry date set to 7 days from reservation
+- Due date set to 14 days from checkout
+
+---
+
+## Acceptance Criteria
+
+- [ ] Overall test coverage exceeds 80%
+- [ ] All 11 API endpoints have automated tests
+- [ ] All business rules validated (5 reservation limit, date calculations, late fees)
+- [ ] Authentication flows tested (register, login, token validation)
+- [ ] Authorization rules tested (PATRON vs LIBRARIAN access)
+- [ ] All public endpoints accessible without authentication
+- [ ] All protected endpoints require authentication
+- [ ] Pagination tested on catalog and history endpoints
+- [ ] Complete reservation lifecycle tested (create → checkout → return)
+- [ ] Late fee calculation verified with multiple scenarios
+- [ ] Error responses have consistent format
+- [ ] All edge cases and boundary conditions tested
+- [ ] Tests run successfully and repeatably
+- [ ] No failing tests
+
+---
+
+## Suggested Approach
+
+1. Start with unit tests for core business logic
+2. Add integration tests for complete workflows
+3. Implement authentication and authorization tests
+4. Test all CRUD operations
+5. Verify business rules (limits, dates, fees)
+6. Test error handling and edge cases
+7. Validate API contracts
+8. Measure and verify code coverage
+9. Ensure tests are isolated and repeatable
+
+**Note:** You have flexibility in choosing testing frameworks, organizing test structure, and implementing test utilities. Focus on achieving comprehensive coverage of business requirements and API contracts.
+
+---
+
+## Resources
+
+- Refer to `user-stories.md` for all business requirements to test
+- Refer to `api-contracts.md` for API contract specifications
+- Spring Boot Testing documentation for framework guidance
+- JUnit and testing framework documentation

@@ -1,350 +1,235 @@
+Perfect! Here's the revised **Milestone 6: Deployment & Production Readiness**:
+
+---
+
 # Milestone 6: Deployment & Production Readiness
 
-**Goal:** Deploy Spring Boot application to AWS Elastic Beanstalk with RDS PostgreSQL
+**Goal:** Deploy application to cloud infrastructure with production database
+
+**Related User Stories:** All (US-001 through US-011) - Production deployment
+
+---
+
+## Business Requirements
+
+### Deployment Objectives
+- Application must be publicly accessible via internet
+- System must use production-grade database (not in-memory)
+- All API endpoints must function in production environment
+- Application must be secure and properly configured
+- Database credentials and secrets must be protected
+
+### Production Environment Requirements
+- Publicly accessible API endpoint
+- Persistent data storage
+- Environment-specific configuration
+- Secure credential management
+- Health monitoring capability
+
+---
+
+## General Technical Requirements
+
+**Deployment Platform:**
+- AWS Elastic Beanstalk (or equivalent cloud platform)
+- Java runtime environment (Java 17 or 21)
+- Single instance deployment (free tier eligible)
+
+**Database:**
+- PostgreSQL 15.x on AWS RDS (or equivalent)
+- Persistent storage
+- Secure network configuration
+- Automated backups
+
+**Configuration:**
+- Environment-based configuration management
+- Secure storage of sensitive data (passwords, secrets, API keys)
+- Port configuration for cloud platform
+- Database connection parameters
+
+**Security:**
+- Restricted database access (not publicly accessible)
+- Network security groups configured correctly
+- Secure JWT secret generation and storage
+- HTTPS support (recommended)
 
 ---
 
 ## Deliverables
 
-### 1. Application Preparation
+### 1. Application Build
+Prepare application for deployment:
+- Build production-ready JAR file
+- Verify build includes all dependencies
+- Ensure configuration supports environment variables
 
-**Build Production JAR:**
+### 2. Database Setup
+Create production database:
+- PostgreSQL database instance
+- Initial database creation
+- Secure credential generation
+- Network configuration for application access
 
-```bash
-# Build the application without running tests
-./mvnw clean package -DskipTests
+### 3. Application Deployment
+Deploy application to cloud platform:
+- Create application environment
+- Upload application artifact
+- Configure runtime environment
+- Set up necessary IAM roles and permissions
 
-# Verify JAR file was created
-ls target/library-management-api-0.0.1-SNAPSHOT.jar
-```
+### 4. Environment Configuration
+Configure application environment:
+- Set server port for platform requirements
+- Configure database connection parameters
+- Set JWT secret for token generation
+- Enable production profile
 
-The production configuration is already set up in `application-prod.properties` which uses environment variables for all
-sensitive data.
+### 5. Network Security
+Configure secure network access:
+- Set up security groups
+- Allow application to connect to database
+- Restrict database to private network
+- Configure application accessibility
 
----
-
-### 2. Setting up RDS PostgreSQL Database
-
-Navigate to **AWS Console → RDS → Create database**
-
-**Engine Options:**
-
-- Engine type: PostgreSQL
-- Version: PostgreSQL 15.x
-- Templates: Free tier (development) or Production
-
-**Availability and Durability:**
-
-- Deployment option: Single DB instance (for development)
-
-**Database Settings:**
-
-- DB instance identifier: `library-app-database`
-- Master username: `postgres`
-- Credentials management: Self managed
-- Master password: Create and save a strong password securely
-
-**Instance Configuration:**
-
-- DB instance class: Burstable classes
-- Select: `db.t4g.micro` (free tier eligible)
-
-**Storage Configuration:**
-
-- Storage type: General Purpose SSD (gp2)
-- Allocated storage: `20` GiB
-- Storage autoscaling: Optional (enable with max 100 GiB)
-
-**Connectivity:**
-
-- Compute resource: Don't connect to an EC2 compute resource
-- Network type: IPv4
-- Virtual Private Cloud (VPC): Default VPC
-- DB subnet group: default
-- Public access: No
-- VPC security group: Choose existing → default
-- Availability Zone: No preference
-
-**Additional Configuration:**
-
-- Initial database name: `librarydb`
-- DB parameter group: default.postgres15
-- Backup retention: 7 days (production) or 1 day (development)
-- Encryption: Enable encryption at rest
-
-**After Creation:**
-
-- Wait 5-10 minutes for database to become "Available"
-- Navigate to your database in RDS console
-- Copy the **Endpoint** from Connectivity & security tab
-- Format will be: `library-app-database.xxxxx.us-east-1.rds.amazonaws.com`
-- Note the **Port**: 5432
+### 6. Verification
+Verify deployment success:
+- Confirm application health
+- Test all API endpoints
+- Verify database connectivity
+- Check API documentation accessibility
 
 ---
 
-### 3. Setting up Elastic Beanstalk Application
+## Required Environment Configuration
 
-Navigate to **AWS Console → Elastic Beanstalk → Create application**
+Your application must be configured with:
 
-**Environment Tier:**
+**Application Settings:**
+- Server port (cloud platform specific)
+- Active profile (production)
 
-- Select: Web server environment
+**Database Connection:**
+- Database hostname/endpoint
+- Database port
+- Database name
+- Database username
+- Database password
 
-**Application Information:**
+**Security:**
+- JWT secret key (minimum 256 bits)
 
-- Application name: `library-management-api`
-- Application tags: (Optional) Add tags for organization
-
-**Environment Information:**
-
-- Environment name: `library-api-env`
-- Domain: Leave blank (AWS will generate URL)
-- Description: Library Management System REST API
-
-**Platform Configuration:**
-
-- Platform: Java
-- Platform branch: Corretto 21 running on 64bit Amazon Linux 2023
-- Platform version: 4.6.5 (Recommended) or latest
-
-**Application Code:**
-
-- Select: Upload your code
-- Version label: `v1.0.0`
-- Source code origin: Local file
-- Choose file: Select your JAR from `target/` directory
-
-**Presets:**
-
-- Configuration presets: Single instance (free tier)
-
-Click **"Next"** to configure more options
-
----
-
-### 4. Service Access Configuration
-
-**IAM Roles:**
-
-- Service role: `aws-elasticbeanstalk-service-role`
-- EC2 instance profile: `aws-elasticbeanstalk-ec2-role`
-
-If these roles don't exist, AWS will automatically create them with the appropriate permissions when you create your
-first Elastic Beanstalk environment.
-
-**EC2 Key Pair:**
-
-- Leave as default (not required for deployment)
-
----
-
-### 5. Networking Configuration
-
-**VPC Configuration:**
-
-- VPC: Select default VPC (must match your RDS VPC)
-- Instance settings:
-    - Public IP address: Leave unchecked
-- Instance subnets: Select at least one subnet:
-    - us-east-1a (subnet-xxxxxxxxx)
-    - us-east-1b (subnet-xxxxxxxxx)
-
-**Database:**
-
-- Enable database: Leave **UNCHECKED** (we're using existing RDS)
-
-**Tags:**
-
-- Optional: Add tags for resource management
-
----
-
-### 6. Environment Properties Configuration
-
-Configure these environment variables (critical for application to work):
-
-| Name                     | Value                      | Description                              |
-|--------------------------|----------------------------|------------------------------------------|
-| `SERVER_PORT`            | `5000`                     | Elastic Beanstalk requires port 5000     |
-| `SPRING_PROFILES_ACTIVE` | `prod`                     | Activates production configuration       |
-| `RDS_HOSTNAME`           | `[your-rds-endpoint]`      | From RDS console (step 2)                |
-| `RDS_PORT`               | `5432`                     | PostgreSQL default port                  |
-| `RDS_DB_NAME`            | `librarydb`                | Database name created in RDS             |
-| `RDS_USERNAME`           | `postgres`                 | Master username from RDS setup           |
-| `RDS_PASSWORD`           | `[your-password]`          | Master password from RDS setup           |
-| `JWT_SECRET`             | `[generate-secure-secret]` | Generate with: `openssl rand -base64 32` |
-
-**To get your RDS endpoint:**
-
-1. Go to RDS console
-2. Click on `library-app-database`
-3. Find endpoint in Connectivity & security section
-4. Copy the full endpoint URL
-
-**To generate JWT secret:**
-
-```bash
-openssl rand -base64 32
-```
-
-Copy the output and use it as `JWT_SECRET` value. Store it securely!
-
----
-
-### 7. Review and Create
-
-- Review all configuration settings
-- Click **"Submit"** to create the environment
-- Wait 5-10 minutes for environment creation
-
----
-
-### 8. Security Group Configuration
-
-After both RDS and Elastic Beanstalk are running:
-
-**Update RDS Security Group:**
-
-1. Navigate to **EC2 → Security Groups**
-2. Find your RDS security group (check RDS instance details)
-3. Click **Edit inbound rules**
-4. Add inbound rule:
-    - Type: PostgreSQL
-    - Port: 5432
-    - Source: Custom → Select Elastic Beanstalk security group
-    - Description: "Allow EB to connect to RDS"
-5. Save rules
-
-This allows your Elastic Beanstalk application to connect to the RDS database.
-
----
-
-## Post-Deployment Verification
-
-### 1. Check Environment Health
-
-- Go to Elastic Beanstalk console
-- Environment health should show **green "Ok"** status
-- If red, check logs for errors
-
-### 2. Test Health Endpoint
-
-```bash
-curl http://[your-eb-url]/actuator/health
-```
-
-Expected: `{"status":"UP"}`
-
-### 3. Access Swagger UI
-
-Open in browser: `http://[your-eb-url]/swagger-ui/index.html`
-
-### 4. Test API Endpoints
-
-**Register a user:**
-
-```bash
-curl -X POST http://[your-eb-url]/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "test@example.com",
-    "password": "Test123!@#",
-    "firstName": "Test",
-    "lastName": "User",
-    "phoneNumber": "+1-555-0123"
-  }'
-```
-
-**Login:**
-
-```bash
-curl -X POST http://[your-eb-url]/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "test@example.com",
-    "password": "Test123!@#"
-  }'
-```
-
-**Browse catalog (no auth required):**
-
-```bash
-curl http://[your-eb-url]/api/catalog/books
-```
-
-### 5. Verify Database Connection
-
-- Check Elastic Beanstalk logs for database connection success
-- Should see: "HikariPool started successfully"
-- Should see: Hibernate table creation logs
-
----
-
-## Troubleshooting
-
-### Environment Health is Red
-
-**Check:**
-
-- Application logs in Elastic Beanstalk console
-- Verify `SERVER_PORT=5000` in environment variables
-- Confirm all environment variables are set correctly
-- Look for startup errors in logs
-
-### Database Connection Failed
-
-**Check:**
-
-- `RDS_HOSTNAME` matches your RDS endpoint exactly
-- RDS security group allows inbound from EB security group
-- Both RDS and EB are in the same VPC
-- Database credentials are correct
-- RDS instance status is "Available"
-
-### Application Won't Start
-
-**Check:**
-
-- All environment variables are configured
-- JAR file uploaded correctly
-- Java version compatibility (Corretto 21)
-- Review full stack trace in EB logs
-
-### 404 on All Endpoints
-
-**Check:**
-
-- Application started successfully (check logs)
-- `server.port=5000` configuration is active
-- Controller mappings loaded (check logs for "Mapped" statements)
+**Note:** All sensitive values should be configured as environment variables, never hardcoded.
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] JAR file builds successfully
-- [ ] RDS PostgreSQL database created with `librarydb` database
-- [ ] RDS endpoint obtained and documented
-- [ ] Elastic Beanstalk environment created successfully
-- [ ] Environment health shows green "Ok" status
-- [ ] All 8 environment variables configured correctly
-- [ ] Security groups configured (EB can connect to RDS)
-- [ ] Health endpoint returns 200 OK
-- [ ] Swagger UI accessible
-- [ ] Can register user successfully
-- [ ] Can login and receive JWT token
-- [ ] Can browse catalog without authentication
-- [ ] Can create reservation with authentication
-- [ ] LIBRARIAN can checkout and return books
-- [ ] Database tables created automatically by Hibernate
+- [ ] Application builds successfully as deployable artifact
+- [ ] Production PostgreSQL database created and accessible
+- [ ] Application deployed to cloud platform
+- [ ] Environment health shows healthy/running status
+- [ ] All environment variables configured correctly
+- [ ] Network security allows application-to-database communication
+- [ ] Network security restricts public database access
+- [ ] Health check endpoint responds successfully
+- [ ] API documentation (Swagger) accessible
+- [ ] User registration works in production
+- [ ] User login returns JWT token
+- [ ] Catalog browsing works without authentication
+- [ ] Authenticated endpoints require valid token
+- [ ] Role-based authorization enforced (LIBRARIAN operations)
+- [ ] Database schema created automatically
+- [ ] All 11 API endpoints functional in production
 
 ---
 
-## Technical Specifications
+## Deployment Verification Checklist
 
-- Platform: Elastic Beanstalk Java (Corretto 21)
-- Database: RDS PostgreSQL 15.x
-- Instance: db.t4g.micro (free tier eligible)
-- Storage: 20GB RDS, 10GB EB
-- Region: US East (us-east-1)
-- Schema management: Hibernate DDL auto-update
+After deployment, verify:
+
+### Basic Connectivity
+- Application URL is accessible
+- Health endpoint returns success
+- API documentation loads
+
+### Authentication Flow
+- User can register
+- User can login
+- JWT token is returned
+- Token works for authenticated endpoints
+
+### Public Endpoints
+- Catalog browsing works
+- Book search and filtering work
+- Book details retrieval works
+
+### Protected Endpoints
+- Profile endpoint requires authentication
+- Reservation creation requires authentication
+- Active reservations require authentication
+
+### Authorization
+- PATRON cannot access checkout endpoint (403)
+- PATRON cannot access return endpoint (403)
+- LIBRARIAN can access checkout endpoint
+- LIBRARIAN can access return endpoint
+
+### Data Persistence
+- Created users persist after application restart
+- Books remain in catalog
+- Reservations persist correctly
+
+---
+
+## Troubleshooting Guidelines
+
+If deployment fails or application doesn't work:
+
+**Check Application Health:**
+- Review application logs
+- Verify all environment variables are set
+- Confirm application started successfully
+
+**Database Connection Issues:**
+- Verify database endpoint is correct
+- Check database credentials
+- Confirm security groups allow connection
+- Ensure database is running and accessible
+
+**Application Errors:**
+- Review startup logs for errors
+- Verify Java version compatibility
+- Check all required dependencies included
+- Confirm port configuration matches platform requirements
+
+**API Not Working:**
+- Verify application started successfully
+- Check endpoint mappings in logs
+- Test with simple curl commands
+- Verify authentication works
+
+---
+
+## Suggested Approach
+
+1. Build and verify application artifact locally
+2. Set up cloud database instance
+3. Configure database security and credentials
+4. Create cloud application environment
+5. Upload application artifact
+6. Configure all environment variables
+7. Configure network security (security groups)
+8. Deploy and monitor application startup
+9. Verify health endpoint
+10. Test all API functionality
+11. Document deployment (URLs, credentials, configuration)
+
+**Note:** You have flexibility in choosing cloud platform services and configuration approaches. Focus on achieving a working, secure, production deployment that meets all acceptance criteria.
+
+---
+
+## Resources
+
+- Refer to `user-stories.md` for all functionality to verify in production
+- Refer to `api-contracts.md` for endpoint testing
+- Refer to `production-enviroment-setup.md` for production setup

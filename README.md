@@ -37,33 +37,60 @@ Our Digital Library Management System provides:
 
 ---
 
-## Project Documentation
+## Getting Started
 
-### Getting Started
+### Start Here - Core Requirements
 
-1. [Development Environment Setup](docs/dev-enviroment-setup.md) - Set up Docker, PostgreSQL, and local development
-   environment
-2. [Milestone 1: Data Modeling](docs/milestone-1-data-modeling-guide.md) - Create entity classes and database schema
+**Before diving into implementation, thoroughly review these foundational documents:**
 
-### Core Features Implementation
+1. **[User Stories](docs/user-stories.md)** - **START HERE**
+    - 11 user stories defining all system functionality
+    - Business requirements and acceptance criteria
+    - This is your primary requirements document
 
-3. [Milestone 2: User Service & Authentication](docs/milestone-2-user-service-authentication.md) - Implement
-   registration, login, and JWT authentication
-4. [Milestone 3: Catalog Service](docs/milestone-3-catalog-service.md) - Build book browsing and search functionality
-5. [Milestone 4: Reservation Service](docs/milestone-4-reservation-service-core-functionality.md) - Implement
-   reservation lifecycle management
+2. **[API Contracts](docs/api-contracts.md)** - **CRITICAL**
+    - Complete external API interface specification
+    - All 10 endpoint definitions with request/response formats
+    - This defines WHAT your API must do (the contract you must fulfill)
 
-### Quality & Deployment
+3. **[Development Environment Setup](docs/dev-enviroment-setup.md)**
+    - Initial project setup and local development configuration
 
-6. [Milestone 5: Testing & Quality Assurance](docs/milestone-5-testing-quality-assurance.md) - Comprehensive testing
-   with REST Assured and MockMVC
-7. [Milestone 6: Deployment & Production Readiness](docs/milestone-6-deployment-production-readiness.md) - Deploy to AWS
-   Elastic Beanstalk with RDS
+### Implementation Approach
 
-### Reference Documentation
+**Prioritize understanding the requirements over implementation details:**
 
-- [User Stories](docs/user-stories.md) - 11 user stories covering all features
-- [API Contracts](docs/api-contracts.md) - Complete API documentation for all 10 endpoints
+- **User Stories** define the business requirements and desired outcomes
+- **API Contracts** define the exact external interface you must implement
+- **Milestone documents** provide guidance on technical approach and acceptance criteria
+
+You have flexibility in **HOW** you implement the solution, but you must meet the requirements defined in the User
+Stories and API Contracts.
+
+---
+
+## Project Structure
+
+### Requirements Documentation (Read First)
+
+- **[User Stories](docs/user-stories.md)** - What needs to be built (business requirements)
+- **[API Contracts](docs/api-contracts.md)** - External API interface (what your API must expose)
+
+### Implementation Guides (Milestones)
+
+1. [Milestone 1: Data Modeling](docs/milestone-1-data-modeling-guide.md) - Database schema and entity design
+2. [Milestone 2: User Service & Authentication](docs/milestone-2-user-service-authentication.md) - Authentication system
+3. [Milestone 3: Catalog Service](docs/milestone-3-catalog-service.md) - Book browsing and search
+4. [Milestone 4: Reservation Service](docs/milestone-4-reservation-service-core-functionality.md) - Reservation
+   lifecycle
+5. [Milestone 5: Testing & Quality Assurance](docs/milestone-5-testing-quality-assurance.md) - Comprehensive testing
+6. [Milestone 6: Deployment & Production Readiness](docs/milestone-6-deployment-production-readiness.md) - Cloud
+   deployment
+
+### Setup Guide
+
+- [Development Environment Setup](docs/dev-enviroment-setup.md) - Local development configuration
+- [Production Environment Setup](docs/production-enviroment-setup.md) - Production configuration
 
 ---
 
@@ -88,65 +115,128 @@ Our Digital Library Management System provides:
 - `POST /api/reservations/{reservationId}/return` - Return book with late fee calculation (Librarian only)
 - `GET /api/reservations/history` - View complete borrowing history
 
+**See [API Contracts](docs/api-contracts.md) for complete endpoint specifications.**
+
 ---
 
-## Technical Stack Summary
+## Technical Stack
 
-### Core Technologies
+### Required Technologies
 
 - **Java**: 17 or 21 (LTS)
 - **Spring Boot**: 3.2+
-- **Spring Security**: 6.x (JWT authentication)
-- **Spring Data JPA**: 3.2+
-- **PostgreSQL**: 15+
+- **Spring Security**: 6.x with JWT authentication
+- **Spring Data JPA**: Database access
+- **PostgreSQL**: 15+ (via Docker locally, RDS in production)
+- **Maven**: Build tool
 
 ### Additional Libraries
 
-- **JWT**: io.jsonwebtoken:jjwt-api:0.11.5+
-- **Validation**: spring-boot-starter-validation
-- **OpenAPI**: springdoc-openapi-starter-webmvc-ui
-- **Testing**: JUnit 5, Mockito, REST Assured, MockMVC
+You may choose appropriate libraries for:
 
-### AWS Deployment
+- JWT token handling
+- API documentation (e.g., SpringDoc OpenAPI)
+- Testing frameworks
+- Validation
 
-- **AWS Elastic Beanstalk**: Java application hosting
+### Deployment
+
+- **AWS Elastic Beanstalk**: Application hosting
 - **AWS RDS**: PostgreSQL database
-- **Amazon VPC**: Network security and isolation
+- Secure environment configuration
 
 ---
 
 ## Success Criteria
 
-### Functional Requirements
+### Business Requirements
 
-- ✅ All 11 user stories fully implemented
-- ✅ 10 API endpoints documented and functional
-- ✅ Complete reservation lifecycle working end-to-end (reserve → checkout → return)
-- ✅ Role-based access control enforced (PATRON vs LIBRARIAN)
-- ✅ JWT authentication with 24-hour token expiration
+Your implementation must satisfy all requirements from the **User Stories**:
 
-### Technical Requirements
+- All 11 user stories fully implemented
+- All acceptance criteria met
+- All business rules enforced (5 reservation limit, 7-day expiry, 14-day checkout, $1/day late fees)
 
-- ✅ >80% test coverage across all services
-- ✅ Integration tests using REST Assured
-- ✅ Unit tests using MockMVC
-- ✅ OpenAPI documentation complete and accessible
-- ✅ Deployed to AWS with RDS PostgreSQL integration
+### API Contract Compliance
 
-### Quality Standards
+Your API must match the **API Contracts** specification exactly:
 
-- ✅ Clean code principles followed
-- ✅ SOLID principles applied
-- ✅ Comprehensive error handling (400, 401, 403, 404, 500)
-- ✅ Proper logging throughout application
-- ✅ Production-ready configuration for AWS deployment
+- All 10 endpoints implemented as specified
+- Request/response formats match exactly
+- HTTP status codes correct
+- Error response format consistent
+- Authentication and authorization working as specified
 
-### Business Rules Implemented
+### Technical Quality
 
-- ✅ Maximum 5 active reservations per user
-- ✅ 7-day reservation expiry period
-- ✅ 14-day checkout period
-- ✅ $1.00 per day late fee calculation
-- ✅ Real-time book availability tracking
+- Minimum 80% test coverage
+- All endpoints tested (unit and integration tests)
+- Proper error handling (400, 401, 403, 404, 500)
+- Security properly implemented (JWT, role-based access)
+- Successfully deployed to cloud environment
 
-For detailed implementation guides, refer to the milestone documents in the `docs/` directory.
+### Functional Verification
+
+- Complete reservation lifecycle works (reserve → checkout → return)
+- Role-based access control enforced (PATRON vs LIBRARIAN)
+- Real-time availability tracking works correctly
+- Late fee calculation accurate
+- Pagination and search functional
+
+---
+
+## Development Philosophy
+
+### Requirements First
+
+1. **Understand the requirements** (User Stories and API Contracts)
+2. **Plan your implementation** (data model, architecture)
+3. **Build to meet the contract** (implement the API as specified)
+4. **Verify completeness** (test against acceptance criteria)
+
+### Implementation Flexibility
+
+You have freedom to decide:
+
+- Internal code organization and architecture
+- Service layer design patterns
+- Repository implementation approaches
+- Validation strategies
+- Testing frameworks and approaches
+- Error handling mechanisms
+
+### Non-Negotiable Constraints
+
+You must adhere to:
+
+- User Story requirements and acceptance criteria
+- API Contract specifications (external interface)
+- Business rules (reservation limits, dates, fees)
+- Technology stack (Spring Boot, PostgreSQL, JWT)
+- Security requirements (authentication, authorization)
+
+---
+
+## Quick Start Guide
+
+1. **Read [User Stories](docs/user-stories.md)** to understand what you're building
+2. **Study [API Contracts](docs/api-contracts.md)** to understand the exact API interface
+3. **Set up your environment** using [Development Environment Setup](docs/dev-enviroment-setup.md)
+4. **Follow the milestones** for structured implementation guidance
+5. **Test against requirements** to verify you've met all acceptance criteria
+6. **Deploy to production** following Milestone 6 guidance
+
+---
+
+## Support & Resources
+
+- **User Stories**: Business requirements and functionality definitions
+- **API Contracts**: External API interface specifications
+- **Milestone Guides**: Implementation guidance and acceptance criteria
+- **Spring Boot Documentation**: Framework reference
+- **PostgreSQL Documentation**: Database reference
+
+---
+
+**Remember**: The User Stories and API Contracts define **WHAT** you must build. The milestone documents suggest **HOW**
+you might approach it, but you have flexibility in your implementation choices as long as you meet the requirements!
