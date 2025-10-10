@@ -4,10 +4,7 @@
 
 ### Overview
 
-The Digital Library Management System is a modern backend API solution designed to digitize and streamline library
-operations for public and institutional libraries. As libraries transition from manual record-keeping to digital
-platforms, this system provides a comprehensive solution for managing book catalogs, user memberships, and borrowing
-workflows.
+The Digital Library Management System is a modern backend API solution designed to digitize and streamline library operations for public and institutional libraries transitioning from manual record-keeping to digital platforms.
 
 ### Business Problem
 
@@ -39,75 +36,72 @@ Our Digital Library Management System provides:
 
 ## Getting Started
 
-### Start Here - Core Requirements
+### Core Requirements Documents
 
-**Before diving into implementation, thoroughly review these foundational documents:**
+**Review these foundational documents before implementation:**
 
 1. **[User Stories](docs/user-stories.md)** - **START HERE**
-    - 11 user stories defining all system functionality
-    - Business requirements and acceptance criteria
-    - This is your primary requirements document
+   - 11 user stories defining all system functionality
+   - Business requirements and acceptance criteria
+   - Your primary requirements document
 
 2. **[API Contracts](docs/api-contracts.md)** - **CRITICAL**
-    - Complete external API interface specification
-    - All 10 endpoint definitions with request/response formats
-    - This defines WHAT your API must do (the contract you must fulfill)
+   - Complete external API interface specification
+   - All 10 endpoint definitions with request/response formats
+   - Defines the contract you must fulfill
 
 3. **[Development Environment Setup](docs/dev-enviroment-setup.md)**
-    - Initial project setup and local development configuration
+   - Initial project setup and local development configuration
 
 ### Implementation Approach
 
-**Prioritize understanding the requirements over implementation details:**
+**Prioritize understanding requirements over implementation details:**
 
-- **User Stories** define the business requirements and desired outcomes
-- **API Contracts** define the exact external interface you must implement
-- **Milestone documents** provide guidance on technical approach and acceptance criteria
+- User Stories define business requirements and desired outcomes
+- API Contracts define the exact external interface
+- Milestone documents provide technical guidance and acceptance criteria
 
-You have flexibility in **HOW** you implement the solution, but you must meet the requirements defined in the User
-Stories and API Contracts.
+You have flexibility in **HOW** you implement the solution, but must meet the requirements defined in User Stories and API Contracts.
 
 ---
 
 ## Project Structure
 
-### Requirements Documentation (Read First)
+### Requirements Documentation
 
-- **[User Stories](docs/user-stories.md)** - What needs to be built (business requirements)
-- **[API Contracts](docs/api-contracts.md)** - External API interface (what your API must expose)
+- **[User Stories](docs/user-stories.md)** - Business requirements
+- **[API Contracts](docs/api-contracts.md)** - External API interface
 
 ### Implementation Guides (Milestones)
 
-1. [Milestone 1: Data Modeling](docs/milestone-1-data-modeling-guide.md) - Database schema and entity design
-2. [Milestone 2: User Service & Authentication](docs/milestone-2-user-service-authentication.md) - Authentication system
-3. [Milestone 3: Catalog Service](docs/milestone-3-catalog-service.md) - Book browsing and search
-4. [Milestone 4: Reservation Service](docs/milestone-4-reservation-service-core-functionality.md) - Reservation
-   lifecycle
-5. [Milestone 5: Testing & Quality Assurance](docs/milestone-5-testing-quality-assurance.md) - Comprehensive testing
-6. [Milestone 6: Deployment & Production Readiness](docs/milestone-6-deployment-production-readiness.md) - Cloud
-   deployment
+1. [Milestone 1: Data Modeling](docs/milestone-1-data-modeling-guide.md)
+2. [Milestone 2: User Service & Authentication](docs/milestone-2-user-service-authentication.md)
+3. [Milestone 3: Catalog Service](docs/milestone-3-catalog-service.md)
+4. [Milestone 4: Reservation Service](docs/milestone-4-reservation-service-core-functionality.md)
+5. [Milestone 5: Testing & Quality Assurance](docs/milestone-5-testing-quality-assurance.md)
+6. [Milestone 6: Deployment & Production Readiness](docs/milestone-6-deployment-production-readiness.md)
 
-### Setup Guide
+### Environment Setup
 
-- [Development Environment Setup](docs/dev-enviroment-setup.md) - Local development configuration
-- [Production Environment Setup](docs/production-enviroment-setup.md) - Production configuration
+- [Development Environment Setup](docs/dev-enviroment-setup.md)
+- [Production Environment Setup](docs/production-enviroment-setup.md)
 
 ---
 
 ## API Endpoints (10 Total)
 
-### Authentication & User Management (3 endpoints)
+### Authentication & User Management (3)
 
 - `POST /api/auth/register` - Create new user account
 - `POST /api/auth/login` - Authenticate and receive JWT token
 - `GET /api/users/profile` - View user profile with statistics
 
-### Catalog Management (2 endpoints)
+### Catalog Management (2)
 
 - `GET /api/catalog/books` - Browse and search books with pagination
 - `GET /api/catalog/books/{bookId}` - View detailed book information
 
-### Reservation Management (5 endpoints)
+### Reservation Management (5)
 
 - `POST /api/reservations` - Reserve an available book
 - `GET /api/reservations` - View active reservations
@@ -115,7 +109,7 @@ Stories and API Contracts.
 - `POST /api/reservations/{reservationId}/return` - Return book with late fee calculation (Librarian only)
 - `GET /api/reservations/history` - View complete borrowing history
 
-**See [API Contracts](docs/api-contracts.md) for complete endpoint specifications.**
+**See [API Contracts](docs/api-contracts.md) for complete specifications.**
 
 ---
 
@@ -132,7 +126,7 @@ Stories and API Contracts.
 
 ### Additional Libraries
 
-You may choose appropriate libraries for:
+Choose appropriate libraries for:
 
 - JWT token handling
 - API documentation (e.g., SpringDoc OpenAPI)
@@ -143,22 +137,14 @@ You may choose appropriate libraries for:
 
 - **AWS Elastic Beanstalk**: Application hosting
 - **AWS RDS**: PostgreSQL database
-- Secure environment configuration
 
 ---
 
 ## Success Criteria
 
-<<<<<<< HEAD
-### Business Requirements
-=======
-> Capstones will be graded using the following success criteria on a Pass/Fail basis.<br>
-> You will revieve a score out of 20, along with instrcutor feedback.
+> Capstones are graded Pass/Fail with a score out of 20 and instructor feedback.
 
-### Functional Requirements
->>>>>>> d69bf7ff68e813a61c1bb707136c0d6d73d6f9e5
-
-Your implementation must satisfy all requirements from the **User Stories**:
+### User Story Compliance
 
 - All 11 user stories fully implemented
 - All acceptance criteria met
@@ -166,23 +152,20 @@ Your implementation must satisfy all requirements from the **User Stories**:
 
 ### API Contract Compliance
 
-Your API must match the **API Contracts** specification exactly:
-
 - All 10 endpoints implemented as specified
 - Request/response formats match exactly
 - HTTP status codes correct
 - Error response format consistent
-- Authentication and authorization working as specified
+- Authentication and authorization working properly
 
 ### Technical Quality
 
 - Minimum 80% test coverage
-- All endpoints tested (unit and integration tests)
+- All endpoints tested (unit and integration)
 - Proper error handling (400, 401, 403, 404, 500)
 - Security properly implemented (JWT, role-based access)
 - Successfully deployed to cloud environment
 
-<<<<<<< HEAD
 ### Functional Verification
 
 - Complete reservation lifecycle works (reserve → checkout → return)
@@ -195,22 +178,22 @@ Your API must match the **API Contracts** specification exactly:
 
 ## Development Philosophy
 
-### Requirements First
+### Requirements-Driven Development
 
-1. **Understand the requirements** (User Stories and API Contracts)
-2. **Plan your implementation** (data model, architecture)
-3. **Build to meet the contract** (implement the API as specified)
-4. **Verify completeness** (test against acceptance criteria)
+1. Understand the requirements (User Stories and API Contracts)
+2. Plan your implementation (data model, architecture)
+3. Build to meet the contract
+4. Verify completeness (test against acceptance criteria)
 
 ### Implementation Flexibility
 
-You have freedom to decide:
+You decide:
 
 - Internal code organization and architecture
 - Service layer design patterns
 - Repository implementation approaches
 - Validation strategies
-- Testing frameworks and approaches
+- Testing frameworks
 - Error handling mechanisms
 
 ### Non-Negotiable Constraints
@@ -218,7 +201,7 @@ You have freedom to decide:
 You must adhere to:
 
 - User Story requirements and acceptance criteria
-- API Contract specifications (external interface)
+- API Contract specifications
 - Business rules (reservation limits, dates, fees)
 - Technology stack (Spring Boot, PostgreSQL, JWT)
 - Security requirements (authentication, authorization)
@@ -227,12 +210,12 @@ You must adhere to:
 
 ## Quick Start Guide
 
-1. **Read [User Stories](docs/user-stories.md)** to understand what you're building
-2. **Study [API Contracts](docs/api-contracts.md)** to understand the exact API interface
-3. **Set up your environment** using [Development Environment Setup](docs/dev-enviroment-setup.md)
-4. **Follow the milestones** for structured implementation guidance
-5. **Test against requirements** to verify you've met all acceptance criteria
-6. **Deploy to production** following Milestone 6 guidance
+1. Read [User Stories](docs/user-stories.md) to understand what you're building
+2. Study [API Contracts](docs/api-contracts.md) to understand the exact API interface
+3. Set up your environment using [Development Environment Setup](docs/dev-enviroment-setup.md)
+4. Follow the milestones for structured implementation guidance
+5. Test against requirements to verify acceptance criteria
+6. Deploy to production following Milestone 6 guidance
 
 ---
 
@@ -246,8 +229,4 @@ You must adhere to:
 
 ---
 
-**Remember**: The User Stories and API Contracts define **WHAT** you must build. The milestone documents suggest **HOW**
-you might approach it, but you have flexibility in your implementation choices as long as you meet the requirements!
-=======
-For detailed implementation guides, refer to the milestone documents in the `docs/` directory.
->>>>>>> d69bf7ff68e813a61c1bb707136c0d6d73d6f9e5
+**Remember**: User Stories and API Contracts define **WHAT** you must build. Milestone documents suggest **HOW** you might approach it, but you have flexibility in implementation as long as you meet the requirements.
