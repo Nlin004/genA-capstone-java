@@ -1,7 +1,3 @@
-Perfect! Here's the revised **Milestone 3: Catalog Service**:
-
----
-
 # Milestone 3: Catalog Service
 
 **Goal:** Build book catalog browsing and search system

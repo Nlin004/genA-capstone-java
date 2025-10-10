@@ -1,7 +1,3 @@
-Here's the revised deployment guide with the renamed database:
-
----
-
 # AWS Deployment Guide: RDS & Elastic Beanstalk
 
 ## Overview

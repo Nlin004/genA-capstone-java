@@ -1,7 +1,3 @@
-Perfect! Here's the revised **Milestone 4: Reservation Service - Core Functionality**:
-
----
-
 # Milestone 4: Reservation Service - Core Functionality
 
 **Goal:** Implement reservation lifecycle management
