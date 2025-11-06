@@ -38,7 +38,7 @@ The Library Management System requires three core domain entities:
 **Technology Stack:**
 - Spring Boot 3.2+
 - Java 17 or 21
-- PostgreSQL 15+ (via Docker for local development)
+- H2 for local development
 - Spring Data JPA with Hibernate
 - Maven build tool
 
