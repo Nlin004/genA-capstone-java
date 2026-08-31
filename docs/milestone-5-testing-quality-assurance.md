@@ -90,7 +90,9 @@ Implement tests that verify complete workflows:
 - Authorization enforcement across endpoints
 - Public endpoint accessibility
 
-### 3. API Contract Tests
+### 3. Test Spring Data Repositories using @DataJpaTest
+
+### 4. API Contract Tests
 Implement tests that verify external API interface:
 - Request/response structure validation
 - HTTP status codes
@@ -98,7 +100,7 @@ Implement tests that verify external API interface:
 - Error response structure
 - Pagination structure
 
-### 4. Business Rule Tests
+### 5. Business Rule Tests
 Implement tests that verify business logic:
 - Reservation limit (maximum 5 active)
 - Available copies management
@@ -106,7 +108,7 @@ Implement tests that verify business logic:
 - Late fee calculations
 - Status transitions (RESERVED → CHECKED_OUT → RETURNED)
 
-### 5. Edge Case Tests
+### 6. Edge Case Tests
 Implement tests for boundary conditions:
 - Empty results
 - Exactly at limit (5 reservations)
