@@ -91,6 +91,40 @@ Implement tests that verify complete workflows:
 - Public endpoint accessibility
 
 ### 3. Test Spring Data Repositories using @DataJpaTest
+`@DataJpaTest` loads only the JPA-related slice of the Spring context (repositories, entities, and the
+`EntityManager`) rather than the full application - this makes repository tests fast and focused, and by default it
+auto-configures an embedded database for the test, which lines up with this project already using H2 for local
+development (see [Data Modeling guide](milestone-1-data-modeling-guide.md)). Use it to test each repository's
+custom query methods directly against real JPA/Hibernate behavior, separate from any service-layer logic:
+
+- **UserRepository**
+    - Find a user by email (used during login and duplicate-registration checks)
+    - Confirm the unique constraint on email is enforced at the database level
+- **BookRepository**
+    - Full-text style search across title and author for the `query` parameter
+    - Filter by genre
+    - Filter by exact ISBN match
+    - Filter to only books where `availableCopies > 0` (the `availableOnly` parameter)
+    - Combined filtering (query + genre + availableOnly together, matching the catalog endpoint's supported
+      combinations)
+    - Sorting by title, author, and publicationYear in both directions
+    - Pagination metadata (page, size, totalElements, totalPages) returned correctly for a known dataset
+    - Confirm the unique constraint on ISBN is enforced at the database level
+- **ReservationRepository**
+    - Find all active reservations (RESERVED or CHECKED_OUT) for a given user, and confirm the count used to
+      enforce the 5-reservation limit is accurate
+    - Find a user's complete borrowing history, paginated, including RETURNED and CANCELLED reservations
+    - Find reservations by status (e.g., all RESERVED reservations past their `expiresAt`, if you implement
+      expiry handling)
+    - Confirm relationships load correctly - a `Reservation` should resolve its associated `Book` and `User`
+      as expected (watch for N+1 query patterns here if you use `@ManyToOne` associations)
+- **General repository test practices**
+    - Use `TestEntityManager` (auto-configured alongside `@DataJpaTest`) to set up test data directly, rather than
+      going through the repository under test, so you're not testing the repository using itself
+    - Each test should start from a clean, known state - `@DataJpaTest` wraps each test in a transaction that
+      rolls back automatically, so tests stay isolated and repeatable without manual cleanup
+    - Test both the "happy path" (data exists, query returns expected results) and the empty-result case (no
+      matches, returns an empty page/list rather than null or an error)
 
 ### 4. API Contract Tests
 Implement tests that verify external API interface:
