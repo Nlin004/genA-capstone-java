@@ -2,13 +2,17 @@ package assembly.general.api.service;
 
 import assembly.general.api.dto.*;
 import assembly.general.api.entity.MembershipStatus;
+import assembly.general.api.entity.ReservationStatus;
 import assembly.general.api.entity.Role;
 import assembly.general.api.entity.User;
 import assembly.general.api.exception.ApiException;
 import assembly.general.api.repository.UserRepository;
+import assembly.general.api.repository.ReservationRepository;
 import assembly.general.api.security.JwtService;
+import assembly.general.api.security.AuthUser;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,20 +25,48 @@ public class UserService {
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     private final UserRepository userRepository;
+    private final ReservationRepository reservationRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final Clock clock;
 
     public UserService(
             UserRepository userRepository,
+            ReservationRepository reservationRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
             Clock clock
     ) {
         this.userRepository = userRepository;
+        this.reservationRepository = reservationRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.clock = clock;
+    }
+
+    @Transactional(readOnly = true)
+    public ProfileResponse profile(AuthUser authUser) {
+        User user = userRepository.findById(authUser.userId())
+                .orElseThrow(() -> ApiException.notFound("User not found"));
+        long active = reservationRepository.countByUser_IdAndStatusIn(
+                user.getId(),
+                List.of(ReservationStatus.RESERVED, ReservationStatus.CHECKED_OUT)
+        );
+        long history = reservationRepository.countByUser_IdAndStatus(
+                user.getId(), ReservationStatus.RETURNED
+        );
+        return new ProfileResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getPhoneNumber(),
+                user.getRole().name(),
+                user.getMembershipStatus().name(),
+                user.getMemberSince(),
+                active,
+                history
+        );
     }
 
 
