@@ -4,6 +4,7 @@ package assembly.general.api.controllers;
 import assembly.general.api.dto.ProfileResponse;
 import assembly.general.api.security.AuthUser;
 import assembly.general.api.service.UserService;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +22,7 @@ public class UserController {
     }
 
     @GetMapping("/profile")
-    public ProfileResponse profile(@AuthenticationPrincipal AuthUser user) {
+    public ProfileResponse profile(@Parameter(hidden = true) @AuthenticationPrincipal AuthUser user) {
         return userService.profile(user);
     }
 }
